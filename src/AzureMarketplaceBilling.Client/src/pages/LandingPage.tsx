@@ -1,18 +1,20 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Layout } from '../components/Layout';
 import { Button } from '../components/Common';
 
 export function LandingPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const features = [
-    { icon: '🔐', title: 'PKI Certificates', description: 'Issue and manage digital certificates for secure authentication' },
-    { icon: '🖨️', title: 'Card Printing', description: 'High-quality ID card printing with advanced security features' },
-    { icon: '💳', title: 'DESFire Encoding', description: 'Secure contactless card encoding for access control' },
-    { icon: '📡', title: 'Prox Credentials', description: 'Legacy proximity card support and encoding' },
-    { icon: '👆', title: 'Biometrics', description: 'Fingerprint and facial recognition enrollment' },
-    { icon: '📱', title: 'Mobile Wallet', description: 'Digital credentials for Apple and Google Wallet' },
-    { icon: '🔑', title: 'FIDO Authentication', description: 'Passwordless authentication with FIDO2 keys' },
+    { icon: '🔐', titleKey: 'pki', title: t('dimensions.pki'), description: t('landing.features.subscription.description') },
+    { icon: '🖨️', titleKey: 'print', title: t('dimensions.print'), description: t('landing.features.metered.description') },
+    { icon: '💳', titleKey: 'desfire', title: t('dimensions.desfire'), description: t('landing.features.realtime.description') },
+    { icon: '📡', titleKey: 'prox', title: t('dimensions.prox'), description: t('landing.features.azure.description') },
+    { icon: '👆', titleKey: 'biometric', title: t('dimensions.biometric'), description: t('landing.features.subscription.description') },
+    { icon: '📱', titleKey: 'wallet', title: t('dimensions.wallet'), description: t('landing.features.metered.description') },
+    { icon: '🔑', titleKey: 'fido', title: t('dimensions.fido'), description: t('landing.features.realtime.description') },
   ];
 
   return (
@@ -25,12 +27,10 @@ export function LandingPage() {
               ComsignTrust <span className="ct-hero__highlight">CMS</span>
             </h1>
             <h2 className="ct-hero__subtitle">
-              Credential Management System
+              {t('landing.hero.title')} - {t('landing.hero.subtitle')}
             </h2>
             <p className="ct-hero__description">
-              A comprehensive platform for managing physical and digital credentials 
-              across your organization. From ID cards to mobile wallets, 
-              secure your workforce with enterprise-grade credential management.
+              {t('landing.hero.description')}
             </p>
             <div className="ct-hero__actions">
               <Button
@@ -38,14 +38,14 @@ export function LandingPage() {
                 size="large"
                 onClick={() => navigate('/pricing')}
               >
-                View Pricing
+                {t('landing.hero.viewPricing')}
               </Button>
               <Button
                 variant="outline"
                 size="large"
                 onClick={() => navigate('/pricing')}
               >
-                Start Free Trial
+                {t('landing.hero.learnMore')}
               </Button>
             </div>
           </div>
@@ -61,10 +61,10 @@ export function LandingPage() {
         {/* Features Section */}
         <section className="ct-features">
           <h2 className="ct-features__title">
-            Seven Credential Types, One Platform
+            {t('landing.features.title')}
           </h2>
           <p className="ct-features__subtitle">
-            Manage all your organization's credential needs from a single, unified platform
+            {t('landing.demo.description')}
           </p>
           <div className="ct-features__grid">
             {features.map((feature, index) => (
@@ -80,17 +80,16 @@ export function LandingPage() {
         {/* CTA Section */}
         <section className="ct-cta">
           <div className="ct-cta__content">
-            <h2 className="ct-cta__title">Ready to Transform Your Credential Management?</h2>
+            <h2 className="ct-cta__title">{t('landing.demo.title')}</h2>
             <p className="ct-cta__description">
-              Join thousands of organizations that trust ComsignTrust CMS 
-              for their credential management needs.
+              {t('landing.demo.description')}
             </p>
             <Button
               variant="primary"
               size="large"
               onClick={() => navigate('/pricing')}
             >
-              Get Started Today
+              {t('landing.hero.viewPricing')}
             </Button>
           </div>
         </section>
@@ -98,8 +97,8 @@ export function LandingPage() {
         {/* Footer */}
         <footer className="ct-footer">
           <p className="ct-footer__text">
-            © 2026 ComsignTrust. All rights reserved. | 
-            <span className="ct-footer__demo"> Demo Application for Azure Marketplace Billing</span>
+            © 2026 ComsignTrust. | 
+            <span className="ct-footer__demo"> {t('landing.demo.title')}</span>
           </p>
         </footer>
       </div>

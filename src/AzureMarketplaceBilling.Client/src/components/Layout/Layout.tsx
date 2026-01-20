@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 
@@ -9,10 +10,12 @@ interface LayoutProps {
 }
 
 export function Layout({ children, showSidebar = false, subscriptionId }: LayoutProps) {
+  const { t } = useTranslation();
+
   const sidebarItems = subscriptionId
     ? [
-        { path: `/dashboard/${subscriptionId}`, label: 'Dashboard', icon: '📊' },
-        { path: `/dashboard/${subscriptionId}/history`, label: 'Usage History', icon: '📈' },
+        { path: `/dashboard/${subscriptionId}`, label: t('nav.dashboard'), icon: '📊' },
+        { path: `/dashboard/${subscriptionId}/history`, label: t('nav.usage'), icon: '📈' },
       ]
     : [];
 

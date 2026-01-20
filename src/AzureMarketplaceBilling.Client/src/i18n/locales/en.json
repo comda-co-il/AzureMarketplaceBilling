@@ -1,0 +1,198 @@
+{
+  "common": {
+    "appName": "ComsignTrust Billing",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "submit": "Submit",
+    "back": "Back",
+    "next": "Next",
+    "yes": "Yes",
+    "no": "No",
+    "status": "Status",
+    "actions": "Actions",
+    "details": "Details",
+    "date": "Date",
+    "amount": "Amount",
+    "total": "Total",
+    "price": "Price",
+    "month": "month",
+    "perUnit": "per unit"
+  },
+  "nav": {
+    "home": "Home",
+    "pricing": "Pricing",
+    "dashboard": "Dashboard",
+    "usage": "Usage History",
+    "admin": "Admin",
+    "logout": "Logout"
+  },
+  "landing": {
+    "hero": {
+      "title": "Azure Marketplace",
+      "subtitle": "Billing Demo",
+      "description": "Experience the complete Azure Marketplace SaaS billing flow with metered usage tracking, overage calculations, and real-time billing simulation.",
+      "viewPricing": "View Pricing",
+      "learnMore": "Learn More"
+    },
+    "features": {
+      "title": "Platform Features",
+      "subscription": {
+        "title": "Subscription Management",
+        "description": "Complete subscription lifecycle management with Azure Marketplace integration."
+      },
+      "metered": {
+        "title": "Metered Billing",
+        "description": "Track usage across 7 credential dimensions with automatic overage calculation."
+      },
+      "realtime": {
+        "title": "Real-time Tracking",
+        "description": "Monitor usage in real-time with visual progress indicators and alerts."
+      },
+      "azure": {
+        "title": "Azure Integration",
+        "description": "Seamless integration with Azure Marketplace Metered Billing APIs."
+      }
+    },
+    "demo": {
+      "title": "Demo Mode",
+      "description": "This application runs in demo mode, simulating Azure Marketplace billing without requiring actual Azure credentials. Perfect for testing and demonstration purposes."
+    }
+  },
+  "pricing": {
+    "title": "Choose Your Plan",
+    "subtitle": "Select the perfect plan for your credential management needs",
+    "popular": "Most Popular",
+    "subscribe": "Subscribe",
+    "currentPlan": "Current Plan",
+    "features": "Plan Features",
+    "includedCredentials": "Included Credentials",
+    "overage": "Overage Rate"
+  },
+  "subscription": {
+    "title": "Subscribe to {{plan}}",
+    "form": {
+      "customerName": "Full Name",
+      "customerEmail": "Email Address",
+      "companyName": "Company Name",
+      "namePlaceholder": "Enter your full name",
+      "emailPlaceholder": "Enter your email address",
+      "companyPlaceholder": "Enter your company name"
+    },
+    "success": {
+      "title": "Subscription Successful!",
+      "message": "Welcome to ComsignTrust! Your subscription has been activated.",
+      "subscriptionId": "Subscription ID",
+      "plan": "Plan",
+      "billingPeriod": "Billing Period",
+      "goToDashboard": "Go to Dashboard"
+    },
+    "status": {
+      "active": "Active",
+      "suspended": "Suspended",
+      "cancelled": "Cancelled"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome, {{name}}!",
+    "overview": "Subscription Overview",
+    "currentPlan": "Current Plan",
+    "billingPeriod": "Billing Period",
+    "status": "Status",
+    "usageSummary": "Usage Summary",
+    "usageOf": "{{used}} of {{total}}",
+    "overage": "overage",
+    "overageCharges": "Overage Charges",
+    "estimatedTotal": "Estimated Total",
+    "basePrice": "Base Price",
+    "simulateUsage": "Simulate Usage",
+    "simulation": {
+      "title": "Simulate Usage",
+      "dimension": "Credential Type",
+      "quantity": "Quantity",
+      "record": "Record Usage"
+    },
+    "demoControls": "Demo Controls",
+    "resetBilling": "Reset Billing Period",
+    "noPlan": "No active subscription"
+  },
+  "usage": {
+    "title": "Usage History",
+    "subtitle": "View your credential usage over time",
+    "dimension": "Dimension",
+    "included": "Included",
+    "used": "Used",
+    "remaining": "Remaining",
+    "overageQty": "Overage",
+    "overageCharge": "Overage Charge",
+    "noHistory": "No usage history available"
+  },
+  "admin": {
+    "title": "Admin Dashboard",
+    "password": "Enter Admin Password",
+    "passwordPlaceholder": "Password",
+    "login": "Login",
+    "invalidPassword": "Invalid password",
+    "tabs": {
+      "overview": "Overview",
+      "subscriptions": "Subscriptions",
+      "billingEvents": "Billing Events"
+    },
+    "stats": {
+      "totalSubscriptions": "Total Subscriptions",
+      "activeSubscriptions": "Active Subscriptions",
+      "totalRevenue": "Total Revenue",
+      "totalOverage": "Total Overage",
+      "billingEvents": "Billing Events"
+    },
+    "subscriptionTable": {
+      "id": "ID",
+      "customer": "Customer",
+      "company": "Company",
+      "plan": "Plan",
+      "status": "Status",
+      "startDate": "Start Date"
+    },
+    "billingTable": {
+      "id": "ID",
+      "subscription": "Subscription",
+      "dimension": "Dimension",
+      "quantity": "Quantity",
+      "amount": "Amount",
+      "status": "Status",
+      "date": "Date",
+      "viewPayload": "View Azure API Payload"
+    },
+    "payloadModal": {
+      "title": "Azure Metered Billing API Payload",
+      "description": "This is the exact JSON payload that would be sent to the Azure Marketplace Metered Billing API."
+    }
+  },
+  "dimensions": {
+    "print": "Print",
+    "pki": "PKI",
+    "desfire": "DESFire",
+    "prox": "Prox",
+    "biometric": "Biometric",
+    "wallet": "Wallet",
+    "fido": "FIDO"
+  },
+  "plans": {
+    "starter": "Starter",
+    "professional": "Professional",
+    "enterprise": "Enterprise"
+  },
+  "errors": {
+    "loadingPlans": "Failed to load plans",
+    "loadingSubscription": "Failed to load subscription",
+    "creatingSubscription": "Failed to create subscription",
+    "recordingUsage": "Failed to record usage",
+    "generic": "An error occurred. Please try again."
+  }
+}

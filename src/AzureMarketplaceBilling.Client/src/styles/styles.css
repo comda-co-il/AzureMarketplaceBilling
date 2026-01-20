@@ -1825,3 +1825,236 @@ a:hover {
     border-bottom-color: var(--ct-gray-300);
   }
 }
+
+/* ==========================================================================
+   Language Selector Component
+   ========================================================================== */
+
+.language-selector {
+  display: flex;
+  gap: var(--ct-space-xs);
+  background: var(--ct-gray-100);
+  border-radius: var(--ct-radius-md);
+  padding: 2px;
+}
+
+.lang-btn {
+  padding: var(--ct-space-xs) var(--ct-space-sm);
+  border: none;
+  background: transparent;
+  border-radius: var(--ct-radius-sm);
+  cursor: pointer;
+  font-size: var(--ct-font-size-sm);
+  font-weight: 500;
+  color: var(--ct-gray-600);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: var(--ct-space-xs);
+}
+
+.lang-btn:hover {
+  background: var(--ct-white);
+  color: var(--ct-primary);
+}
+
+.lang-btn.active {
+  background: var(--ct-white);
+  color: var(--ct-primary);
+  box-shadow: var(--ct-shadow-sm);
+}
+
+/* Header Actions Container */
+.ct-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ct-space-lg);
+}
+
+/* ==========================================================================
+   RTL (Right-to-Left) Support
+   ========================================================================== */
+
+/* Base RTL Direction */
+[dir="rtl"] {
+  text-align: right;
+}
+
+/* Header RTL */
+[dir="rtl"] .ct-header-logo__link {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .ct-header-logo {
+  border-radius: var(--ct-radius-xl) var(--ct-radius-xl) 0 0;
+}
+
+/* Sidebar RTL */
+[dir="rtl"] .ct-sidebar {
+  border-right: none;
+  border-left: 1px solid var(--ct-gray-300);
+}
+
+[dir="rtl"] .ct-sidebar__item {
+  flex-direction: row-reverse;
+}
+
+/* Main content RTL */
+[dir="rtl"] .ct-main--with-sidebar {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Alerts RTL */
+[dir="rtl"] .ct-alert {
+  left: auto;
+  right: var(--ct-space-lg);
+  border-radius: 0 0 0 15px;
+  animation: slideInRtl 0.3s ease;
+}
+
+@keyframes slideInRtl {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+[dir="rtl"] .ct-alert-container {
+  left: auto;
+  right: var(--ct-space-lg);
+}
+
+/* Tables RTL */
+[dir="rtl"] .ct-table th {
+  text-align: right;
+}
+
+/* Plan Card RTL */
+[dir="rtl"] .ct-plan-card__quota-item,
+[dir="rtl"] .ct-plan-card__overage-item {
+  flex-direction: row-reverse;
+}
+
+/* Usage Bar RTL */
+[dir="rtl"] .ct-usage-bar__header {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .ct-usage-bar__details {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .ct-usage-bar__overage-fill {
+  left: auto;
+  right: 100%;
+  border-radius: var(--ct-radius-lg) 0 0 var(--ct-radius-lg);
+}
+
+/* Dashboard RTL */
+[dir="rtl"] .ct-dashboard__header {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .ct-dashboard__meta {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .ct-billing-period {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .ct-billing-period__item {
+  text-align: left;
+}
+
+/* Demo Controls RTL */
+[dir="rtl"] .ct-demo-controls__form {
+  flex-direction: row-reverse;
+}
+
+/* Admin RTL */
+[dir="rtl"] .ct-admin__header {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .ct-plan-distribution__item {
+  direction: ltr;
+}
+
+[dir="rtl"] .ct-event-detail__row {
+  flex-direction: row-reverse;
+}
+
+/* Success Page RTL */
+[dir="rtl"] .ct-success__details {
+  text-align: right;
+}
+
+[dir="rtl"] .ct-success__info-item {
+  align-items: flex-start;
+}
+
+/* Form RTL */
+[dir="rtl"] .ct-signup-form__actions {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .ct-checkbox {
+  flex-direction: row-reverse;
+}
+
+/* Modal RTL */
+[dir="rtl"] .ct-modal__header {
+  flex-direction: row-reverse;
+}
+
+/* Landing Page RTL */
+[dir="rtl"] .ct-hero {
+  direction: rtl;
+}
+
+[dir="rtl"] .ct-hero__actions {
+  flex-direction: row-reverse;
+}
+
+/* Pricing Page RTL */
+[dir="rtl"] .ct-pricing__header {
+  text-align: center;
+}
+
+/* Navigation RTL */
+[dir="rtl"] .ct-header-nav {
+  flex-direction: row-reverse;
+}
+
+/* Usage Page RTL */
+[dir="rtl"] .ct-usage-page__header {
+  flex-direction: row-reverse;
+}
+
+/* General flex containers RTL */
+[dir="rtl"] .ct-success__actions {
+  flex-direction: row-reverse;
+}
+
+/* Card content alignment */
+[dir="rtl"] .ct-card__header h2 {
+  text-align: right;
+}
+
+/* JSON Code Block (keep LTR for code) */
+[dir="rtl"] .ct-event-detail__json {
+  direction: ltr;
+  text-align: left;
+}
+
+/* Mono values (keep LTR for IDs and codes) */
+[dir="rtl"] .ct-success__info-value--mono {
+  direction: ltr;
+  text-align: left;
+}

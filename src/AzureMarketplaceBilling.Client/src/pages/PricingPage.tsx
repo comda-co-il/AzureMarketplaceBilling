@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Layout } from '../components/Layout';
 import { PlanCard } from '../components/Billing';
 import { Modal, Button, Alert } from '../components/Common';
@@ -8,6 +9,7 @@ import type { Plan, CreateSubscriptionRequest } from '../types';
 
 export function PricingPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +35,7 @@ export function PricingPage() {
       const data = await plansApi.getAll();
       setPlans(data);
     } catch (err) {
-      setError('Failed to load pricing plans. Please try again later.');
+      setError(t('errors.loadingPlans'));
       console.error(err);
     } finally {
       setLoading(false);
@@ -53,7 +55,7 @@ export function PricingPage() {
     e.preventDefault();
     
     if (!termsAccepted) {
-      setFormError('Please accept the terms and conditions');
+      setFormError(t('errors.generic'));
       return;
     }
 
@@ -63,7 +65,7 @@ export function PricingPage() {
       const subscription = await subscriptionsApi.create(formData);
       navigate(`/subscription-success/${subscription.id}`);
     } catch (err) {
-      setFormError('Failed to create subscription. Please try again.');
+      setFormError(t('errors.creatingSubscription'));
       console.error(err);
     } finally {
       setSubmitting(false);
@@ -88,7 +90,7 @@ export function PricingPage() {
       <Layout>
         <div className="ct-pricing ct-pricing--loading">
           <div className="ct-spinner ct-spinner--large"></div>
-          <p>Loading pricing plans...</p>
+          <p>{t('common.loading')}</p>
         </div>
       </Layout>
     );
@@ -99,7 +101,7 @@ export function PricingPage() {
       <Layout>
         <div className="ct-pricing ct-pricing--error">
           <Alert type="error" message={error} autoClose={false} />
-          <Button onClick={loadPlans}>Try Again</Button>
+          <Button onClick={loadPlans}>{t('common.submit')}</Button>
         </div>
       </Layout>
     );
@@ -109,10 +111,9 @@ export function PricingPage() {
     <Layout>
       <div className="ct-pricing">
         <header className="ct-pricing__header">
-          <h1 className="ct-pricing__title">Simple, Transparent Pricing</h1>
+          <h1 className="ct-pricing__title">{t('pricing.title')}</h1>
           <p className="ct-pricing__subtitle">
-            Choose the plan that fits your organization's needs. 
-            All plans include access to all seven credential types.
+            {t('pricing.subtitle')}
           </p>
         </header>
 
@@ -126,43 +127,10 @@ export function PricingPage() {
           ))}
         </div>
 
-        <section className="ct-pricing__faq">
-          <h2 className="ct-pricing__faq-title">Frequently Asked Questions</h2>
-          <div className="ct-pricing__faq-grid">
-            <div className="ct-pricing__faq-item">
-              <h3>What happens when I exceed my quota?</h3>
-              <p>
-                Usage beyond your included quota is billed at the overage rate shown 
-                for each dimension. You'll never be cut off - we simply bill for the extra usage.
-              </p>
-            </div>
-            <div className="ct-pricing__faq-item">
-              <h3>Can I change plans at any time?</h3>
-              <p>
-                Yes! You can upgrade or downgrade your plan at any time. 
-                Changes take effect immediately.
-              </p>
-            </div>
-            <div className="ct-pricing__faq-item">
-              <h3>Is there a free trial?</h3>
-              <p>
-                Yes, all plans come with a 14-day free trial. No credit card required to start.
-              </p>
-            </div>
-            <div className="ct-pricing__faq-item">
-              <h3>How is billing handled?</h3>
-              <p>
-                Monthly base fee is charged at the start of each billing period. 
-                Overage charges are calculated at the end of the period.
-              </p>
-            </div>
-          </div>
-        </section>
-
         <Modal
           isOpen={isModalOpen}
           onClose={closeModal}
-          title="Complete Your Subscription"
+          title={t('subscription.title', { plan: selectedPlan?.name })}
           size="medium"
         >
           <form onSubmit={handleSubmit} className="ct-signup-form">
@@ -171,14 +139,14 @@ export function PricingPage() {
             )}
             
             <div className="ct-signup-form__plan-summary">
-              <h3>Selected Plan: {selectedPlan?.name}</h3>
+              <h3>{selectedPlan?.name}</h3>
               <p className="ct-signup-form__price">
-                ${selectedPlan?.monthlyPrice}/month
+                ${selectedPlan?.monthlyPrice}/{t('common.month')}
               </p>
             </div>
 
             <div className="ct-input-group">
-              <label className="ct-label--primary">Company Name *</label>
+              <label className="ct-label--primary">{t('subscription.form.companyName')} *</label>
               <input
                 type="text"
                 className="ct-input--primary"
@@ -187,12 +155,12 @@ export function PricingPage() {
                   setFormData({ ...formData, companyName: e.target.value })
                 }
                 required
-                placeholder="Enter your company name"
+                placeholder={t('subscription.form.companyPlaceholder')}
               />
             </div>
 
             <div className="ct-input-group">
-              <label className="ct-label--primary">Contact Name *</label>
+              <label className="ct-label--primary">{t('subscription.form.customerName')} *</label>
               <input
                 type="text"
                 className="ct-input--primary"
@@ -201,12 +169,12 @@ export function PricingPage() {
                   setFormData({ ...formData, customerName: e.target.value })
                 }
                 required
-                placeholder="Enter your full name"
+                placeholder={t('subscription.form.namePlaceholder')}
               />
             </div>
 
             <div className="ct-input-group">
-              <label className="ct-label--primary">Email Address *</label>
+              <label className="ct-label--primary">{t('subscription.form.customerEmail')} *</label>
               <input
                 type="email"
                 className="ct-input--primary"
@@ -215,7 +183,7 @@ export function PricingPage() {
                   setFormData({ ...formData, customerEmail: e.target.value })
                 }
                 required
-                placeholder="Enter your email address"
+                placeholder={t('subscription.form.emailPlaceholder')}
               />
             </div>
 
@@ -227,17 +195,17 @@ export function PricingPage() {
                   onChange={(e) => setTermsAccepted(e.target.checked)}
                 />
                 <span className="ct-checkbox__label">
-                  I accept the Terms of Service and Privacy Policy
+                  {t('common.yes')}
                 </span>
               </label>
             </div>
 
             <div className="ct-signup-form__actions">
               <Button variant="outline" type="button" onClick={closeModal}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button variant="primary" type="submit" loading={submitting}>
-                Complete Subscription
+                {t('common.submit')}
               </Button>
             </div>
           </form>

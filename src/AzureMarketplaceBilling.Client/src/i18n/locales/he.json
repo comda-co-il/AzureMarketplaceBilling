@@ -1,0 +1,198 @@
+{
+  "common": {
+    "appName": "חיוב ComsignTrust",
+    "loading": "טוען...",
+    "error": "שגיאה",
+    "success": "הצלחה",
+    "cancel": "ביטול",
+    "save": "שמור",
+    "delete": "מחק",
+    "edit": "ערוך",
+    "close": "סגור",
+    "submit": "שלח",
+    "back": "חזור",
+    "next": "הבא",
+    "yes": "כן",
+    "no": "לא",
+    "status": "סטטוס",
+    "actions": "פעולות",
+    "details": "פרטים",
+    "date": "תאריך",
+    "amount": "סכום",
+    "total": "סה״כ",
+    "price": "מחיר",
+    "month": "חודש",
+    "perUnit": "ליחידה"
+  },
+  "nav": {
+    "home": "בית",
+    "pricing": "מחירון",
+    "dashboard": "לוח בקרה",
+    "usage": "היסטוריית שימוש",
+    "admin": "ניהול",
+    "logout": "התנתק"
+  },
+  "landing": {
+    "hero": {
+      "title": "Azure Marketplace",
+      "subtitle": "הדגמת חיוב",
+      "description": "חווה את זרימת החיוב המלאה של Azure Marketplace SaaS עם מעקב שימוש מדוד, חישובי חריגה וסימולציית חיוב בזמן אמת.",
+      "viewPricing": "צפה במחירון",
+      "learnMore": "למד עוד"
+    },
+    "features": {
+      "title": "תכונות הפלטפורמה",
+      "subscription": {
+        "title": "ניהול מנויים",
+        "description": "ניהול מחזור חיים מלא של מנויים עם אינטגרציה ל-Azure Marketplace."
+      },
+      "metered": {
+        "title": "חיוב מדוד",
+        "description": "מעקב שימוש ב-7 ממדי אישורים עם חישוב חריגה אוטומטי."
+      },
+      "realtime": {
+        "title": "מעקב בזמן אמת",
+        "description": "מעקב שימוש בזמן אמת עם מחווני התקדמות ויזואליים והתראות."
+      },
+      "azure": {
+        "title": "אינטגרציה עם Azure",
+        "description": "אינטגרציה חלקה עם ממשקי API של חיוב מדוד ב-Azure Marketplace."
+      }
+    },
+    "demo": {
+      "title": "מצב הדגמה",
+      "description": "אפליקציה זו פועלת במצב הדגמה, מדמה חיוב Azure Marketplace ללא צורך באישורי Azure אמיתיים. מושלם לבדיקות והדגמות."
+    }
+  },
+  "pricing": {
+    "title": "בחר את התוכנית שלך",
+    "subtitle": "בחר את התוכנית המושלמת לצרכי ניהול האישורים שלך",
+    "popular": "הכי פופולרי",
+    "subscribe": "הירשם",
+    "currentPlan": "תוכנית נוכחית",
+    "features": "תכונות התוכנית",
+    "includedCredentials": "אישורים כלולים",
+    "overage": "תעריף חריגה"
+  },
+  "subscription": {
+    "title": "הרשמה ל-{{plan}}",
+    "form": {
+      "customerName": "שם מלא",
+      "customerEmail": "כתובת אימייל",
+      "companyName": "שם החברה",
+      "namePlaceholder": "הזן את שמך המלא",
+      "emailPlaceholder": "הזן את כתובת האימייל שלך",
+      "companyPlaceholder": "הזן את שם החברה"
+    },
+    "success": {
+      "title": "ההרשמה הצליחה!",
+      "message": "ברוכים הבאים ל-ComsignTrust! המנוי שלך הופעל.",
+      "subscriptionId": "מזהה מנוי",
+      "plan": "תוכנית",
+      "billingPeriod": "תקופת חיוב",
+      "goToDashboard": "עבור ללוח הבקרה"
+    },
+    "status": {
+      "active": "פעיל",
+      "suspended": "מושהה",
+      "cancelled": "בוטל"
+    }
+  },
+  "dashboard": {
+    "title": "לוח בקרה",
+    "welcome": "ברוך הבא, {{name}}!",
+    "overview": "סקירת מנוי",
+    "currentPlan": "תוכנית נוכחית",
+    "billingPeriod": "תקופת חיוב",
+    "status": "סטטוס",
+    "usageSummary": "סיכום שימוש",
+    "usageOf": "{{used}} מתוך {{total}}",
+    "overage": "חריגה",
+    "overageCharges": "חיובי חריגה",
+    "estimatedTotal": "סה״כ משוער",
+    "basePrice": "מחיר בסיס",
+    "simulateUsage": "סימולציית שימוש",
+    "simulation": {
+      "title": "סימולציית שימוש",
+      "dimension": "סוג אישור",
+      "quantity": "כמות",
+      "record": "רשום שימוש"
+    },
+    "demoControls": "פקדי הדגמה",
+    "resetBilling": "אפס תקופת חיוב",
+    "noPlan": "אין מנוי פעיל"
+  },
+  "usage": {
+    "title": "היסטוריית שימוש",
+    "subtitle": "צפה בשימוש האישורים שלך לאורך זמן",
+    "dimension": "ממד",
+    "included": "כלול",
+    "used": "בשימוש",
+    "remaining": "נותר",
+    "overageQty": "חריגה",
+    "overageCharge": "חיוב חריגה",
+    "noHistory": "אין היסטוריית שימוש זמינה"
+  },
+  "admin": {
+    "title": "לוח בקרה למנהל",
+    "password": "הזן סיסמת מנהל",
+    "passwordPlaceholder": "סיסמה",
+    "login": "התחבר",
+    "invalidPassword": "סיסמה שגויה",
+    "tabs": {
+      "overview": "סקירה",
+      "subscriptions": "מנויים",
+      "billingEvents": "אירועי חיוב"
+    },
+    "stats": {
+      "totalSubscriptions": "סה״כ מנויים",
+      "activeSubscriptions": "מנויים פעילים",
+      "totalRevenue": "הכנסה כוללת",
+      "totalOverage": "סה״כ חריגות",
+      "billingEvents": "אירועי חיוב"
+    },
+    "subscriptionTable": {
+      "id": "מזהה",
+      "customer": "לקוח",
+      "company": "חברה",
+      "plan": "תוכנית",
+      "status": "סטטוס",
+      "startDate": "תאריך התחלה"
+    },
+    "billingTable": {
+      "id": "מזהה",
+      "subscription": "מנוי",
+      "dimension": "ממד",
+      "quantity": "כמות",
+      "amount": "סכום",
+      "status": "סטטוס",
+      "date": "תאריך",
+      "viewPayload": "צפה ב-Payload של Azure API"
+    },
+    "payloadModal": {
+      "title": "Payload של Azure Metered Billing API",
+      "description": "זהו ה-JSON המדויק שיישלח ל-API של חיוב מדוד ב-Azure Marketplace."
+    }
+  },
+  "dimensions": {
+    "print": "הדפסה",
+    "pki": "PKI",
+    "desfire": "DESFire",
+    "prox": "Prox",
+    "biometric": "ביומטרי",
+    "wallet": "ארנק",
+    "fido": "FIDO"
+  },
+  "plans": {
+    "starter": "התחלתי",
+    "professional": "מקצועי",
+    "enterprise": "ארגוני"
+  },
+  "errors": {
+    "loadingPlans": "טעינת התוכניות נכשלה",
+    "loadingSubscription": "טעינת המנוי נכשלה",
+    "creatingSubscription": "יצירת המנוי נכשלה",
+    "recordingUsage": "רישום השימוש נכשל",
+    "generic": "אירעה שגיאה. אנא נסה שוב."
+  }
+}

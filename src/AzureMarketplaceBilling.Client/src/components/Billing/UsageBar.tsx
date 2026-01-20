@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { DimensionUsage } from '../../types';
 
 interface UsageBarProps {
@@ -6,6 +7,7 @@ interface UsageBarProps {
 }
 
 export function UsageBar({ dimension, showDetails = true }: UsageBarProps) {
+  const { t } = useTranslation();
   const percentage = Math.min(dimension.usagePercentage, 100);
   const overagePercentage = dimension.usagePercentage > 100 
     ? Math.min(dimension.usagePercentage - 100, 50) 
@@ -30,7 +32,7 @@ export function UsageBar({ dimension, showDetails = true }: UsageBarProps) {
           {dimension.usedQuantity.toLocaleString()} / {dimension.includedQuantity.toLocaleString()}
           {dimension.overageQuantity > 0 && (
             <span className="ct-usage-bar__overage">
-              {' '}(+{dimension.overageQuantity.toLocaleString()} overage)
+              {' '}(+{dimension.overageQuantity.toLocaleString()} {t('dashboard.overage')})
             </span>
           )}
         </span>
@@ -53,11 +55,11 @@ export function UsageBar({ dimension, showDetails = true }: UsageBarProps) {
       {showDetails && (
         <div className="ct-usage-bar__details">
           <span className="ct-usage-bar__percentage">
-            {dimension.usagePercentage.toFixed(1)}% used
+            {dimension.usagePercentage.toFixed(1)}%
           </span>
           {dimension.overageCharges > 0 && (
             <span className="ct-usage-bar__charges">
-              Overage: ${dimension.overageCharges.toFixed(2)}
+              {t('dashboard.overageCharges')}: ${dimension.overageCharges.toFixed(2)}
             </span>
           )}
         </div>

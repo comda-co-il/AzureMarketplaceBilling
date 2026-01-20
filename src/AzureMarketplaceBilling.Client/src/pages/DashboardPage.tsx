@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Layout } from '../components/Layout';
 import { UsageBar } from '../components/Billing';
 import { Card, CardBody, CardHeader, Button, Alert } from '../components/Common';
@@ -8,6 +9,7 @@ import { TokenUsageType, TokenUsageTypeNames, SubscriptionStatus } from '../type
 
 export function DashboardPage() {
   const { id } = useParams<{ id: string }>();
+  const { t, i18n } = useTranslation();
   const { subscription, usage, loading, error, recordUsage, startNewBillingPeriod } = useSubscription(id);
   
   const [selectedDimension, setSelectedDimension] = useState<TokenUsageType>(TokenUsageType.Pki);
@@ -16,14 +18,28 @@ export function DashboardPage() {
   const [alertMessage, setAlertMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [resettingPeriod, setResettingPeriod] = useState(false);
 
+  // Translated dimension names
+  const getDimensionName = (type: TokenUsageType) => {
+    const keys: Record<TokenUsageType, string> = {
+      [TokenUsageType.Print]: 'dimensions.print',
+      [TokenUsageType.Pki]: 'dimensions.pki',
+      [TokenUsageType.Desfire]: 'dimensions.desfire',
+      [TokenUsageType.Prox]: 'dimensions.prox',
+      [TokenUsageType.Biometric]: 'dimensions.biometric',
+      [TokenUsageType.Wallet]: 'dimensions.wallet',
+      [TokenUsageType.Fido]: 'dimensions.fido',
+    };
+    return t(keys[type]);
+  };
+
   const handleRecordUsage = async () => {
     try {
       setRecording(true);
       setAlertMessage(null);
       await recordUsage(selectedDimension, quantity);
-      setAlertMessage({ type: 'success', message: `Successfully recorded ${quantity} ${TokenUsageTypeNames[selectedDimension]}` });
+      setAlertMessage({ type: 'success', message: `${t('common.success')}: ${quantity} ${getDimensionName(selectedDimension)}` });
     } catch (err) {
-      setAlertMessage({ type: 'error', message: 'Failed to record usage. Please try again.' });
+      setAlertMessage({ type: 'error', message: t('errors.recordingUsage') });
       console.error(err);
     } finally {
       setRecording(false);
@@ -31,7 +47,7 @@ export function DashboardPage() {
   };
 
   const handleNewBillingPeriod = async () => {
-    if (!window.confirm('Are you sure you want to start a new billing period? This will reset all usage counters.')) {
+    if (!window.confirm(t('dashboard.resetBilling') + '?')) {
       return;
     }
     
@@ -39,9 +55,9 @@ export function DashboardPage() {
       setResettingPeriod(true);
       setAlertMessage(null);
       await startNewBillingPeriod();
-      setAlertMessage({ type: 'success', message: 'New billing period started successfully!' });
+      setAlertMessage({ type: 'success', message: t('common.success') });
     } catch (err) {
-      setAlertMessage({ type: 'error', message: 'Failed to start new billing period.' });
+      setAlertMessage({ type: 'error', message: t('errors.generic') });
       console.error(err);
     } finally {
       setResettingPeriod(false);
@@ -53,7 +69,7 @@ export function DashboardPage() {
       <Layout showSidebar subscriptionId={id}>
         <div className="ct-dashboard ct-dashboard--loading">
           <div className="ct-spinner ct-spinner--large"></div>
-          <p>Loading dashboard...</p>
+          <p>{t('common.loading')}</p>
         </div>
       </Layout>
     );
@@ -63,11 +79,10 @@ export function DashboardPage() {
     return (
       <Layout>
         <div className="ct-dashboard ct-dashboard--error">
-          <h1>Dashboard Not Found</h1>
-          <p>{error || 'Could not load subscription data.'}</p>
+          <h1>{t('dashboard.title')}</h1>
+          <p>{error || t('errors.loadingSubscription')}</p>
           <p className="ct-dashboard__hint">
-            Make sure you have a valid subscription ID. 
-            <Link to="/pricing"> Create a new subscription</Link>
+            <Link to="/pricing">{t('nav.pricing')}</Link>
           </p>
         </div>
       </Layout>
@@ -75,15 +90,19 @@ export function DashboardPage() {
   }
 
   const statusLabel = {
-    [SubscriptionStatus.Active]: 'Active',
-    [SubscriptionStatus.Suspended]: 'Suspended',
-    [SubscriptionStatus.Cancelled]: 'Cancelled',
+    [SubscriptionStatus.Active]: t('subscription.status.active'),
+    [SubscriptionStatus.Suspended]: t('subscription.status.suspended'),
+    [SubscriptionStatus.Cancelled]: t('subscription.status.cancelled'),
   };
 
   const statusClass = {
     [SubscriptionStatus.Active]: 'ct-status--active',
     [SubscriptionStatus.Suspended]: 'ct-status--suspended',
     [SubscriptionStatus.Cancelled]: 'ct-status--cancelled',
+  };
+
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString(i18n.language === 'he' ? 'he-IL' : 'en-US');
   };
 
   return (
@@ -106,13 +125,13 @@ export function DashboardPage() {
                 {statusLabel[subscription.status]}
               </span>
               <span className="ct-dashboard__plan">
-                {subscription.plan?.name} Plan - ${subscription.plan?.monthlyPrice}/month
+                {subscription.plan?.name} - ${subscription.plan?.monthlyPrice}/{t('common.month')}
               </span>
             </div>
           </div>
           <div className="ct-dashboard__header-actions">
             <Link to={`/dashboard/${id}/history`}>
-              <Button variant="outline">View History</Button>
+              <Button variant="outline">{t('nav.usage')}</Button>
             </Link>
           </div>
         </header>
@@ -122,27 +141,26 @@ export function DashboardPage() {
           <CardBody>
             <div className="ct-billing-period">
               <div className="ct-billing-period__info">
-                <h3>Current Billing Period</h3>
+                <h3>{t('dashboard.billingPeriod')}</h3>
                 <p>
-                  {new Date(usage.billingPeriodStart).toLocaleDateString()} - {' '}
-                  {new Date(usage.billingPeriodEnd).toLocaleDateString()}
+                  {formatDate(usage.billingPeriodStart)} - {formatDate(usage.billingPeriodEnd)}
                 </p>
               </div>
               <div className="ct-billing-period__summary">
                 <div className="ct-billing-period__item">
-                  <span className="ct-billing-period__label">Base Fee</span>
+                  <span className="ct-billing-period__label">{t('dashboard.basePrice')}</span>
                   <span className="ct-billing-period__value">
                     ${subscription.plan?.monthlyPrice.toFixed(2)}
                   </span>
                 </div>
                 <div className="ct-billing-period__item">
-                  <span className="ct-billing-period__label">Overage Charges</span>
+                  <span className="ct-billing-period__label">{t('dashboard.overageCharges')}</span>
                   <span className="ct-billing-period__value ct-billing-period__value--overage">
                     ${usage.totalOverageCharges.toFixed(2)}
                   </span>
                 </div>
                 <div className="ct-billing-period__item ct-billing-period__item--total">
-                  <span className="ct-billing-period__label">Estimated Total</span>
+                  <span className="ct-billing-period__label">{t('dashboard.estimatedTotal')}</span>
                   <span className="ct-billing-period__value">
                     ${((subscription.plan?.monthlyPrice || 0) + usage.totalOverageCharges).toFixed(2)}
                   </span>
@@ -155,7 +173,7 @@ export function DashboardPage() {
         {/* Usage Overview */}
         <Card className="ct-dashboard__usage">
           <CardHeader>
-            <h2>Usage Overview</h2>
+            <h2>{t('dashboard.usageSummary')}</h2>
           </CardHeader>
           <CardBody>
             <div className="ct-usage-grid">
@@ -169,32 +187,32 @@ export function DashboardPage() {
         {/* Demo Controls */}
         <Card className="ct-dashboard__demo-controls">
           <CardHeader>
-            <h2>🧪 Demo Controls</h2>
-            <span className="ct-demo-badge">Simulation Mode</span>
+            <h2>🧪 {t('dashboard.demoControls')}</h2>
+            <span className="ct-demo-badge">{t('landing.demo.title')}</span>
           </CardHeader>
           <CardBody>
             <p className="ct-demo-controls__description">
-              Use these controls to simulate credential operations and see how usage tracking and overage billing works.
+              {t('landing.demo.description')}
             </p>
             
             <div className="ct-demo-controls__form">
               <div className="ct-input-group">
-                <label className="ct-label--primary">Credential Type</label>
+                <label className="ct-label--primary">{t('dashboard.simulation.dimension')}</label>
                 <select
                   className="ct-input--primary"
                   value={selectedDimension}
                   onChange={(e) => setSelectedDimension(Number(e.target.value) as TokenUsageType)}
                 >
-                  {Object.entries(TokenUsageTypeNames).map(([value, name]) => (
+                  {Object.entries(TokenUsageTypeNames).map(([value, _name]) => (
                     <option key={value} value={value}>
-                      {name}
+                      {getDimensionName(Number(value) as TokenUsageType)}
                     </option>
                   ))}
                 </select>
               </div>
               
               <div className="ct-input-group">
-                <label className="ct-label--primary">Quantity</label>
+                <label className="ct-label--primary">{t('dashboard.simulation.quantity')}</label>
                 <input
                   type="number"
                   className="ct-input--primary"
@@ -210,21 +228,21 @@ export function DashboardPage() {
                 onClick={handleRecordUsage}
                 loading={recording}
               >
-                Simulate Usage
+                {t('dashboard.simulateUsage')}
               </Button>
             </div>
 
             <div className="ct-demo-controls__divider"></div>
 
             <div className="ct-demo-controls__period">
-              <h3>Billing Period Controls</h3>
-              <p>Start a new billing period to reset all usage counters and test the billing cycle.</p>
+              <h3>{t('dashboard.billingPeriod')}</h3>
+              <p>{t('landing.demo.description')}</p>
               <Button
                 variant="outline"
                 onClick={handleNewBillingPeriod}
                 loading={resettingPeriod}
               >
-                Start New Billing Period
+                {t('dashboard.resetBilling')}
               </Button>
             </div>
           </CardBody>
