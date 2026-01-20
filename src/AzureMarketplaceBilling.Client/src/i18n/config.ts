@@ -15,8 +15,8 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    fallbackLng: 'he',
-    lng: 'he', // Default language is Hebrew
+    fallbackLng: 'en',
+    lng: 'en', // Default language is English
     interpolation: {
       escapeValue: false
     },

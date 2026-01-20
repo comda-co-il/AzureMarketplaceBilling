@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AzureMarketplaceBilling.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+91afd95fd4ce07e53ffa87d31ad04e90c9f9d6b9")]
 [assembly: System.Reflection.AssemblyProductAttribute("AzureMarketplaceBilling.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AzureMarketplaceBilling.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

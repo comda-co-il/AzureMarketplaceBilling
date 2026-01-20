@@ -149,3 +149,4 @@ C:\Users\galc\Desktop\CcmsCommercialPlatform\AzureMarketplaceBilling\src\AzureMa
 C:\Users\galc\Desktop\CcmsCommercialPlatform\AzureMarketplaceBilling\src\AzureMarketplaceBilling.Api\obj\Debug\net10.0\AzureMarketplaceBilling.Api.pdb
 C:\Users\galc\Desktop\CcmsCommercialPlatform\AzureMarketplaceBilling\src\AzureMarketplaceBilling.Api\obj\Debug\net10.0\AzureMarketplaceBilling.Api.genruntimeconfig.cache
 C:\Users\galc\Desktop\CcmsCommercialPlatform\AzureMarketplaceBilling\src\AzureMarketplaceBilling.Api\obj\Debug\net10.0\ref\AzureMarketplaceBilling.Api.dll
+C:\Users\galc\Desktop\CcmsCommercialPlatform\AzureMarketplaceBilling\src\AzureMarketplaceBilling.Api\obj\Debug\net10.0\AzureMarketplaceBilling.Api.sourcelink.json
