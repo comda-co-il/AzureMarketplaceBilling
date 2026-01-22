@@ -15,6 +15,11 @@ public class AppDbContext : DbContext
     public DbSet<UsageRecord> UsageRecords => Set<UsageRecord>();
     public DbSet<UsageEvent> UsageEvents => Set<UsageEvent>();
     
+    /// <summary>
+    /// Stores raw Azure webhook events for development/debugging purposes
+    /// </summary>
+    public DbSet<AzureWebhookEvent> AzureWebhookEvents => Set<AzureWebhookEvent>();
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -65,6 +70,15 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Amount).HasPrecision(18, 2);
             entity.HasIndex(e => e.ResourceId);
             entity.HasIndex(e => e.CreatedAt);
+        });
+        
+        // AzureWebhookEvent configuration (for development/debugging)
+        modelBuilder.Entity<AzureWebhookEvent>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.ReceivedAt);
+            entity.HasIndex(e => e.SubscriptionId);
+            entity.HasIndex(e => e.Action);
         });
     }
 }

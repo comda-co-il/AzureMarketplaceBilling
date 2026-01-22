@@ -12,9 +12,19 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new() { Title = "Azure Marketplace Billing API", Version = "v1" });
 });
 
-// Configure SQLite database
+// Configure database provider (SQLite or SqlServer)
+var databaseProvider = builder.Configuration.GetValue<string>("DatabaseProvider") ?? "SQLite";
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    if (databaseProvider.Equals("SqlServer", StringComparison.OrdinalIgnoreCase))
+    {
+        options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer"));
+    }
+    else
+    {
+        options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
+    }
+});
 
 // Configure services based on demo mode
 var isDemo = builder.Configuration.GetValue<bool>("IsDemo");
