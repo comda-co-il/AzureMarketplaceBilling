@@ -284,6 +284,17 @@ a:hover {
   border-color: var(--ct-accent-dark);
 }
 
+.ct-button--ghost {
+  background: transparent;
+  color: var(--ct-primary);
+  border: none;
+  padding: var(--ct-space-xs) var(--ct-space-sm);
+}
+
+.ct-button--ghost:hover:not(:disabled) {
+  background: var(--ct-primary-light);
+}
+
 /* Button Sizes */
 .ct-button--small {
   padding: var(--ct-space-xs) var(--ct-space-sm);

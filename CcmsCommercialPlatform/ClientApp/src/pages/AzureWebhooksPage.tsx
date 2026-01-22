@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Layout } from '../components/Layout';
 import { Card, CardHeader, CardBody, Button, Modal } from '../components/Common';
 import { azureWebhookApi } from '../services/api';
-import type { AzureWebhookEvent, PaginatedResponse } from '../types';
+import type { AzureWebhookEvent } from '../types';
 
 /**
  * Azure Webhooks Development Page
