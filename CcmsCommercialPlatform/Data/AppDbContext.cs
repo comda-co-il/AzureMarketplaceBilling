@@ -5,6 +5,8 @@ namespace CcmsCommercialPlatform.Api.Data;
 
 public class AppDbContext : DbContext
 {
+    private const string Schema = "CcmsCommercialPlatform";
+    
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
     }
@@ -23,6 +25,9 @@ public class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        
+        // Set default schema for all entities
+        modelBuilder.HasDefaultSchema(Schema);
         
         // Plan configuration
         modelBuilder.Entity<Plan>(entity =>

@@ -11,7 +11,8 @@ import type {
   PaginatedResponse,
 } from '../types';
 
-const API_BASE_URL = 'http://localhost:5001/api';
+// Use relative URL so it works in both dev and production
+const API_BASE_URL = '/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

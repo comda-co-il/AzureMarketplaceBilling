@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using CcmsCommercialPlatform.Api.Models;
 using CcmsCommercialPlatform.Api.Models.Enums;
 
@@ -7,12 +8,34 @@ public static class DbInitializer
 {
     public static void Initialize(AppDbContext context)
     {
-        context.Database.EnsureCreated();
+        // Create schema if it doesn't exist (for SQL Server with custom schema)
+        try
+        {
+            context.Database.ExecuteSqlRaw(@"
+                IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'CcmsCommercialPlatform')
+                BEGIN
+                    EXEC('CREATE SCHEMA [CcmsCommercialPlatform]')
+                END");
+        }
+        catch
+        {
+            // Ignore if not SQL Server or schema already exists
+        }
+        
+        // Apply migrations or create database
+        context.Database.Migrate();
         
         // Check if data already exists
-        if (context.Plans.Any())
+        try
         {
-            return; // Database has been seeded
+            if (context.Plans.Any())
+            {
+                return; // Database has been seeded
+            }
+        }
+        catch
+        {
+            // Tables might not exist yet, continue with seeding
         }
         
         // Seed Plans
