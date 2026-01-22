@@ -1,6 +1,6 @@
-# Azure Marketplace Billing Demo Application
+# CCMS Commercial Platform
 
-A complete Azure Marketplace SaaS billing demo application that simulates the full subscription and metered billing flow. This is a **DEMO application** that demonstrates how Azure Marketplace billing works and can later be connected to real Azure Marketplace APIs.
+A complete Azure Marketplace SaaS billing platform for CCMS (Credential Centralized Management System). This application handles subscription management and metered billing for Azure Marketplace integration.
 
 ## Features
 
@@ -20,10 +20,10 @@ A complete Azure Marketplace SaaS billing demo application that simulates the fu
 ## Project Structure
 
 ```
-AzureMarketplaceBilling/
-├── AzureMarketplaceBilling.sln
+CcmsCommercialPlatform/
+├── CcmsCommercialPlatform.sln
 ├── src/
-│   ├── AzureMarketplaceBilling.Api/          # ASP.NET Core Backend
+│   ├── CcmsCommercialPlatform.Api/          # ASP.NET Core Backend
 │   │   ├── Controllers/
 │   │   │   ├── PlansController.cs
 │   │   │   ├── SubscriptionsController.cs
@@ -52,7 +52,7 @@ AzureMarketplaceBilling/
 │   │   ├── Program.cs
 │   │   └── appsettings.json
 │   │
-│   └── AzureMarketplaceBilling.Client/       # React Frontend
+│   └── CcmsCommercialPlatform.Client/       # React Frontend
 │       ├── src/
 │       │   ├── components/
 │       │   │   ├── Layout/
@@ -79,7 +79,7 @@ AzureMarketplaceBilling/
 
 1. Navigate to the API project:
    ```bash
-   cd src/AzureMarketplaceBilling.Api
+   cd src/CcmsCommercialPlatform.Api
    ```
 
 2. Restore dependencies:
@@ -101,7 +101,7 @@ AzureMarketplaceBilling/
 
 1. Navigate to the client project:
    ```bash
-   cd src/AzureMarketplaceBilling.Client
+   cd src/CcmsCommercialPlatform.Client
    ```
 
 2. Install dependencies:

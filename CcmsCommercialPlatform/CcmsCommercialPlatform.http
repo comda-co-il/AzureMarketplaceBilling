@@ -1,0 +1,6 @@
+@CcmsCommercialPlatform.Api_HostAddress = http://localhost:5001
+
+GET {{CcmsCommercialPlatform.Api_HostAddress}}/api/plans
+Accept: application/json
+
+###
