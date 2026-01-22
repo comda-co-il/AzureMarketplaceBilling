@@ -9,6 +9,7 @@ import type {
   RecordUsageRequest,
   AdminDashboardStats,
   PaginatedResponse,
+  AzureWebhookEvent,
 } from '../types';
 
 // Use relative URL so it works in both dev and production
@@ -146,6 +147,34 @@ export const adminApi = {
     const response = await api.get<AdminDashboardStats>('/admin/dashboard', {
       headers: { 'X-Admin-Password': password },
     });
+    return response.data;
+  },
+};
+
+// Azure Webhook Events API (Development)
+export const azureWebhookApi = {
+  getEvents: async (
+    page = 1,
+    pageSize = 50
+  ): Promise<PaginatedResponse<AzureWebhookEvent>> => {
+    const response = await api.get<PaginatedResponse<AzureWebhookEvent>>(
+      '/webhook/azure/events',
+      { params: { page, pageSize } }
+    );
+    return response.data;
+  },
+
+  getEvent: async (id: number): Promise<AzureWebhookEvent> => {
+    const response = await api.get<AzureWebhookEvent>(
+      `/webhook/azure/events/${id}`
+    );
+    return response.data;
+  },
+
+  clearEvents: async (): Promise<{ message: string }> => {
+    const response = await api.delete<{ message: string }>(
+      '/webhook/azure/events'
+    );
     return response.data;
   },
 };

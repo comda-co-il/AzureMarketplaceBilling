@@ -123,6 +123,24 @@ export interface PaginatedResponse<T> {
   totalPages: number;
 }
 
+// Azure Webhook Event for development/debugging
+export interface AzureWebhookEvent {
+  id: number;
+  rawPayload: string;
+  action?: string;
+  activityId?: string;
+  subscriptionId?: string;
+  publisherId?: string;
+  offerId?: string;
+  planId?: string;
+  operationId?: string;
+  status?: string;
+  azureTimestamp?: string;
+  receivedAt: string;
+  headers?: string;
+  sourceIp?: string;
+}
+
 export const TokenUsageTypeNames: Record<TokenUsageType, string> = {
   [TokenUsageType.Print]: 'Print Jobs',
   [TokenUsageType.Pki]: 'PKI Certificates',
