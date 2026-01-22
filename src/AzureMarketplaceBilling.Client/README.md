@@ -1,73 +1,160 @@
-# React + TypeScript + Vite
+# CCMS Azure Marketplace Billing Portal
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A comprehensive billing and subscription management portal for **CCMS (Credential Centralized Management System)** - deployed via Azure Marketplace with metered billing support.
 
-Currently, two official plugins are available:
+## 🎯 About This Application
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+This is the **customer-facing billing portal** for CCMS, enabling organizations to:
 
-## React Compiler
+- Subscribe to CCMS plans via Azure Marketplace
+- Monitor credential usage across all 7 dimension types
+- Track billing and overage charges in real-time
+- Manage subscription lifecycle (upgrade, downgrade, cancel)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 🔐 About CCMS
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+**CCMS** is a centralized platform for the issuance, management, and lifecycle control of digital credentials. It serves enterprise environments requiring secure identification, authentication, and digital signature capabilities.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Credential Types Supported
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+| Type | Description |
+|------|-------------|
+| **PKI Certificates** | Digital certificates for authentication & signatures (RSA/ECC) |
+| **Card Printing** | Physical ID cards with security features |
+| **DESFire Encoding** | Contactless NFC smartcard encoding |
+| **Prox Credentials** | Proximity card encoding (Wiegand 26-bit) |
+| **Biometrics** | Fingerprint and facial recognition enrollment |
+| **Mobile Wallet** | Apple/Google Wallet digital credentials |
+| **FIDO Keys** | Passwordless authentication with FIDO2 |
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Core Capabilities
+
+- **Credential Lifecycle**: Issue, revoke, suspend, renew, reset, unblock
+- **Multi-CA Support**: Integration with enterprise and public CAs
+- **HSM Integration**: Hardware Security Module for key protection
+- **Active Directory Sync**: Automatic user provisioning
+- **Kiosk Self-Service**: Autonomous credential issuance stations
+- **RBAC**: Role-based access control for operators
+- **Audit Logging**: Complete traceability for compliance
+
+---
+
+## 💰 Billing Model
+
+CCMS uses **Azure Marketplace metered billing** with the following structure:
+
+### Plans
+
+| Plan | Monthly Base | Target |
+|------|-------------|--------|
+| **Starter** | $299 | Small organizations (up to 100 users) |
+| **Professional** | $799 | Medium organizations (up to 500 users) |
+| **Enterprise** | $1,999 | Large organizations (unlimited users) |
+
+### Metered Dimensions
+
+Each plan includes quotas for all 7 credential types. Usage beyond the included quota is billed at per-unit overage rates:
+
+- Print credentials
+- PKI certificates
+- DESFire cards
+- Prox cards
+- Biometric enrollments
+- Wallet passes
+- FIDO keys
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- npm or yarn
+
+### Installation
+
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Development
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev
 ```
+
+The application will start at `http://localhost:5173`
+
+### Production Build
+
+```bash
+npm run build
+```
+
+---
+
+## 🌐 Internationalization
+
+The portal supports multiple languages:
+
+- **English** (default)
+- **Hebrew** (עברית) with full RTL support
+
+Language can be switched using the selector in the header.
+
+---
+
+## 🔗 Backend API
+
+This frontend connects to the CCMS Billing API which handles:
+
+- Subscription management
+- Usage tracking and reporting
+- Azure Marketplace webhook integration
+- Metered billing event submission
+
+API documentation available at `/swagger` when running the backend.
+
+---
+
+## 📁 Project Structure
+
+```
+src/
+├── components/
+│   ├── Billing/       # PlanCard, UsageBar, UsageHistory
+│   ├── Common/        # Button, Card, Modal, Table, Alert
+│   └── Layout/        # Header, Sidebar, Layout
+├── hooks/             # Custom React hooks
+├── i18n/              # Internationalization (en, he)
+├── pages/             # Landing, Pricing, Dashboard, Admin
+├── services/          # API client
+├── styles/            # ComsignTrust design system CSS
+└── types/             # TypeScript definitions
+```
+
+---
+
+## 🛡️ Security & Compliance
+
+- HTTPS encrypted communication
+- Azure AD authentication support
+- GDPR-compliant data handling
+- ISO 27001 aligned access controls
+- Complete audit trail logging
+
+---
+
+## 📞 Support
+
+For technical support or billing inquiries:
+
+- **Email**: support@comsigntrust.com
+- **Documentation**: https://docs.comsigntrust.com/ccms
+
+---
+
+© 2026 ComsignTrust. All rights reserved.
