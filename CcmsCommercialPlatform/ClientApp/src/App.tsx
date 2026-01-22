@@ -7,6 +7,7 @@ import {
   UsagePage,
   AdminPage,
   PrivacyPolicyPage,
+  SupportPage,
   AzureLandingPage,
   AzureWebhooksPage,
 } from './pages';
@@ -23,6 +24,7 @@ function App() {
         <Route path="/dashboard/:id/history" element={<UsagePage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+        <Route path="/support" element={<SupportPage />} />
         {/* Azure Development Pages (for Technical Configuration in Marketplace offers) */}
         <Route path="/azure-landing" element={<AzureLandingPage />} />
         <Route path="/azure-webhooks" element={<AzureWebhooksPage />} />

@@ -5,6 +5,7 @@ export { DashboardPage } from './DashboardPage';
 export { UsagePage } from './UsagePage';
 export { AdminPage } from './AdminPage';
 export { PrivacyPolicyPage } from './PrivacyPolicyPage';
+export { SupportPage } from './SupportPage';
 // Azure Development Pages (to be removed after integration)
 export { AzureLandingPage } from './AzureLandingPage';
 export { AzureWebhooksPage } from './AzureWebhooksPage';
