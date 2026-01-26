@@ -1,4 +1,5 @@
 using CcmsCommercialPlatform.Api.Models;
+using CcmsCommercialPlatform.Api.Models.DTOs;
 
 namespace CcmsCommercialPlatform.Api.Services;
 
@@ -17,6 +18,24 @@ public class AzureMarketplaceClient : IAzureMarketplaceClient
     {
         _logger = logger;
         _configuration = configuration;
+    }
+    
+    public async Task<ResolvedSubscriptionInfo> ResolveTokenAsync(string token)
+    {
+        // TODO: Implement real Azure Marketplace Resolve API call
+        // POST https://marketplaceapi.microsoft.com/api/saas/subscriptions/resolve
+        // ?api-version=2018-08-31
+        // Headers:
+        // - Authorization: Bearer <token>
+        // - x-ms-marketplace-token: <marketplace-token>
+        // - Content-Type: application/json
+        
+        _logger.LogWarning(
+            "AzureMarketplaceClient.ResolveTokenAsync called but not implemented. " +
+            "Configure 'IsDemo: true' to use DemoAzureMarketplaceClient instead.");
+        
+        await Task.CompletedTask;
+        throw new NotImplementedException("Real Azure Marketplace API integration not yet implemented");
     }
     
     public async Task<bool> ReportUsageAsync(UsageEvent usageEvent)

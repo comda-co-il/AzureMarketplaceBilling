@@ -39,6 +39,10 @@ else
 
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 builder.Services.AddScoped<IMeteredBillingService, MeteredBillingService>();
+builder.Services.AddScoped<IMarketplaceSubscriptionService, MarketplaceSubscriptionService>();
+
+// Add HttpClient for external API calls
+builder.Services.AddHttpClient();
 
 // Configure CORS for React frontend
 builder.Services.AddCors(options =>

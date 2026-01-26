@@ -10,6 +10,13 @@ import type {
   AdminDashboardStats,
   PaginatedResponse,
   AzureWebhookEvent,
+  ResolveTokenRequest,
+  ResolvedSubscriptionInfo,
+  SubmitCustomerInfoRequest,
+  SubmitFeatureSelectionRequest,
+  FinalizeSubscriptionRequest,
+  MarketplaceSubscriptionResponse,
+  AvailableFeature,
 } from '../types';
 
 // Use relative URL so it works in both dev and production
@@ -174,6 +181,95 @@ export const azureWebhookApi = {
   clearEvents: async (): Promise<{ message: string }> => {
     const response = await api.delete<{ message: string }>(
       '/webhook/azure/events'
+    );
+    return response.data;
+  },
+};
+
+// Marketplace Subscription API (Azure Marketplace signup flow)
+export const marketplaceApi = {
+  /**
+   * Stage 3: Resolve Azure Marketplace token
+   */
+  resolveToken: async (
+    request: ResolveTokenRequest
+  ): Promise<ResolvedSubscriptionInfo> => {
+    const response = await api.post<ResolvedSubscriptionInfo>(
+      '/marketplace/resolve',
+      request
+    );
+    return response.data;
+  },
+
+  /**
+   * Get marketplace subscription by ID
+   */
+  getSubscription: async (id: number): Promise<MarketplaceSubscriptionResponse> => {
+    const response = await api.get<MarketplaceSubscriptionResponse>(
+      `/marketplace/${id}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Stage 4: Submit customer information
+   */
+  submitCustomerInfo: async (
+    request: SubmitCustomerInfoRequest
+  ): Promise<MarketplaceSubscriptionResponse> => {
+    const response = await api.post<MarketplaceSubscriptionResponse>(
+      '/marketplace/customer-info',
+      request
+    );
+    return response.data;
+  },
+
+  /**
+   * Metered Billing Stage: Submit feature/token selections
+   */
+  submitFeatureSelection: async (
+    request: SubmitFeatureSelectionRequest
+  ): Promise<MarketplaceSubscriptionResponse> => {
+    const response = await api.post<MarketplaceSubscriptionResponse>(
+      '/marketplace/features',
+      request
+    );
+    return response.data;
+  },
+
+  /**
+   * Finish: Finalize subscription and submit to external system
+   */
+  finalizeSubscription: async (
+    request: FinalizeSubscriptionRequest
+  ): Promise<MarketplaceSubscriptionResponse> => {
+    const response = await api.post<MarketplaceSubscriptionResponse>(
+      '/marketplace/finalize',
+      request
+    );
+    return response.data;
+  },
+
+  /**
+   * Get available features for selection
+   */
+  getAvailableFeatures: async (): Promise<AvailableFeature[]> => {
+    const response = await api.get<AvailableFeature[]>(
+      '/marketplace/available-features'
+    );
+    return response.data;
+  },
+
+  /**
+   * Get all marketplace subscriptions (admin)
+   */
+  getAllSubscriptions: async (
+    page = 1,
+    pageSize = 20
+  ): Promise<MarketplaceSubscriptionResponse[]> => {
+    const response = await api.get<MarketplaceSubscriptionResponse[]>(
+      '/marketplace',
+      { params: { page, pageSize } }
     );
     return response.data;
   },

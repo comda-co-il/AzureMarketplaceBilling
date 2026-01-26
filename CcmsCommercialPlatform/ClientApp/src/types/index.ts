@@ -150,3 +150,113 @@ export const TokenUsageTypeNames: Record<TokenUsageType, string> = {
   [TokenUsageType.Wallet]: 'Wallet Credentials',
   [TokenUsageType.Fido]: 'FIDO Enrollments',
 };
+
+// Marketplace Subscription Types
+
+export enum MarketplaceSubscriptionStatus {
+  PendingCustomerInfo = 0,
+  PendingFeatureSelection = 1,
+  PendingSubmission = 2,
+  SubmittedToExternalSystem = 3,
+  Active = 4,
+  Cancelled = 5,
+  Error = 6,
+}
+
+export interface ResolveTokenRequest {
+  token: string;
+}
+
+export interface PurchaserInfo {
+  emailId: string;
+  tenantId: string;
+  objectId: string;
+}
+
+export interface BeneficiaryInfo {
+  emailId: string;
+  tenantId: string;
+  objectId: string;
+}
+
+export interface ResolvedSubscriptionInfo {
+  subscriptionId: string;
+  subscriptionName: string;
+  offerId: string;
+  planId: string;
+  purchaser: PurchaserInfo;
+  beneficiary: BeneficiaryInfo;
+  marketplaceSubscriptionId: number;
+}
+
+export interface SubmitCustomerInfoRequest {
+  marketplaceSubscriptionId: number;
+  customerName: string;
+  customerEmail: string;
+  companyName: string;
+  phoneNumber?: string;
+  jobTitle?: string;
+  country?: string;
+  comments?: string;
+}
+
+export interface FeatureSelectionItem {
+  featureId: string;
+  featureName: string;
+  isEnabled: boolean;
+  quantity: number;
+  pricePerUnit: number;
+  notes?: string;
+}
+
+export interface SubmitFeatureSelectionRequest {
+  marketplaceSubscriptionId: number;
+  features: FeatureSelectionItem[];
+}
+
+export interface FinalizeSubscriptionRequest {
+  marketplaceSubscriptionId: number;
+}
+
+export interface FeatureSelectionResponse {
+  id: number;
+  featureId: string;
+  featureName: string;
+  isEnabled: boolean;
+  quantity: number;
+  pricePerUnit: number;
+  notes: string;
+}
+
+export interface MarketplaceSubscriptionResponse {
+  id: number;
+  azureSubscriptionId: string;
+  offerId: string;
+  planId: string;
+  subscriptionName: string;
+  purchaserEmail: string;
+  purchaserTenantId: string;
+  customerName: string;
+  customerEmail: string;
+  companyName: string;
+  phoneNumber: string;
+  jobTitle: string;
+  country: string;
+  comments: string;
+  status: MarketplaceSubscriptionStatus;
+  statusDisplay: string;
+  featureSelections: FeatureSelectionResponse[];
+  createdAt: string;
+  customerInfoSubmittedAt?: string;
+  featureSelectionCompletedAt?: string;
+  submittedToExternalSystemAt?: string;
+}
+
+export interface AvailableFeature {
+  featureId: string;
+  featureName: string;
+  description: string;
+  pricePerUnit: number;
+  minQuantity: number;
+  maxQuantity: number;
+}

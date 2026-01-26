@@ -1,249 +1,606 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams, useLocation } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { Layout } from '../components/Layout';
-import { Card, CardHeader, CardBody } from '../components/Common';
+import { Card, CardHeader, CardBody, Button } from '../components/Common';
+import { marketplaceApi } from '../services/api';
+import type {
+  ResolvedSubscriptionInfo,
+  MarketplaceSubscriptionResponse,
+  AvailableFeature,
+  FeatureSelectionItem,
+} from '../types';
 
-/**
- * Azure Marketplace Landing Page (Development)
- * 
- * This page receives query parameters from Azure Marketplace when a customer
- * subscribes to the SaaS offer. It extracts and displays all parameters for
- * development and debugging purposes.
- * 
- * Expected Azure parameters:
- * - token: Marketplace identification token (used to resolve subscription details)
- * - subscription: Subscription ID (for direct API calls)
- * - ms-correlationid: Microsoft correlation ID for tracing
- * - offer: Offer ID
- * - plan: Plan ID
- * 
- * This page is for Technical Configuration -> Landing page URL in Azure Partner Center.
- */
+type Step = 'resolving' | 'customer-info' | 'feature-selection' | 'thank-you';
+
+interface FeatureState extends AvailableFeature {
+  isEnabled: boolean;
+  quantity: number;
+}
+
 export function AzureLandingPage() {
   const [searchParams] = useSearchParams();
-  const location = useLocation();
-  const [params, setParams] = useState<{ key: string; value: string }[]>([]);
-  const [rawUrl, setRawUrl] = useState('');
+  const token = searchParams.get('token');
 
+  // State
+  const [currentStep, setCurrentStep] = useState<Step>('resolving');
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Data state
+  const [resolvedInfo, setResolvedInfo] = useState<ResolvedSubscriptionInfo | null>(null);
+  const [subscription, setSubscription] = useState<MarketplaceSubscriptionResponse | null>(null);
+  const [availableFeatures, setAvailableFeatures] = useState<FeatureState[]>([]);
+
+  // Form state - Customer Info
+  const [customerName, setCustomerName] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [jobTitle, setJobTitle] = useState('');
+  const [country, setCountry] = useState('');
+  const [comments, setComments] = useState('');
+
+  // Step 1: Resolve token on mount
   useEffect(() => {
-    // Extract all query parameters
-    const paramList: { key: string; value: string }[] = [];
-    searchParams.forEach((value, key) => {
-      paramList.push({ key, value });
-    });
-    setParams(paramList);
+    if (!token) {
+      setError('No token provided. Please access this page from Azure Marketplace.');
+      return;
+    }
 
-    // Store the raw URL for reference
-    setRawUrl(window.location.href);
-  }, [searchParams]);
+    const resolveToken = async () => {
+      try {
+        setIsLoading(true);
+        const result = await marketplaceApi.resolveToken({ token });
+        setResolvedInfo(result);
 
-  // Known Azure Marketplace parameters
-  const knownParams = [
-    { key: 'token', description: 'Marketplace identification token (resolve via API to get subscription details)' },
-    { key: 'subscription', description: 'Azure subscription ID' },
-    { key: 'ms-correlationid', description: 'Microsoft correlation ID for support and tracing' },
-    { key: 'offer', description: 'Offer ID from Azure Marketplace' },
-    { key: 'plan', description: 'Selected plan ID' },
-  ];
+        // Pre-fill email from purchaser
+        if (result.purchaser?.emailId) {
+          setCustomerEmail(result.purchaser.emailId);
+        }
 
-  const getParamDescription = (key: string): string | undefined => {
-    return knownParams.find(p => p.key.toLowerCase() === key.toLowerCase())?.description;
+        // Load available features
+        const features = await marketplaceApi.getAvailableFeatures();
+        setAvailableFeatures(
+          features.map((f) => ({
+            ...f,
+            isEnabled: false,
+            quantity: f.minQuantity,
+          }))
+        );
+
+        setCurrentStep('customer-info');
+      } catch (err) {
+        console.error('Failed to resolve token:', err);
+        setError('Failed to resolve marketplace token. Please try again or contact support.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    resolveToken();
+  }, [token]);
+
+  // Step 2: Submit customer info
+  const handleSubmitCustomerInfo = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!resolvedInfo) return;
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const result = await marketplaceApi.submitCustomerInfo({
+        marketplaceSubscriptionId: resolvedInfo.marketplaceSubscriptionId,
+        customerName,
+        customerEmail,
+        companyName,
+        phoneNumber,
+        jobTitle,
+        country,
+        comments,
+      });
+
+      setSubscription(result);
+      setCurrentStep('feature-selection');
+    } catch (err) {
+      console.error('Failed to submit customer info:', err);
+      setError('Failed to submit customer information. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
+  // Toggle feature
+  const handleToggleFeature = (featureId: string) => {
+    setAvailableFeatures((prev) =>
+      prev.map((f) =>
+        f.featureId === featureId ? { ...f, isEnabled: !f.isEnabled } : f
+      )
+    );
+  };
+
+  // Update feature quantity
+  const handleQuantityChange = (featureId: string, quantity: number) => {
+    setAvailableFeatures((prev) =>
+      prev.map((f) =>
+        f.featureId === featureId
+          ? { ...f, quantity: Math.max(f.minQuantity, Math.min(f.maxQuantity, quantity)) }
+          : f
+      )
+    );
+  };
+
+  // Step 3: Submit feature selection
+  const handleSubmitFeatures = async () => {
+    if (!resolvedInfo) return;
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const features: FeatureSelectionItem[] = availableFeatures
+        .filter((f) => f.isEnabled)
+        .map((f) => ({
+          featureId: f.featureId,
+          featureName: f.featureName,
+          isEnabled: true,
+          quantity: f.quantity,
+          pricePerUnit: f.pricePerUnit,
+        }));
+
+      const result = await marketplaceApi.submitFeatureSelection({
+        marketplaceSubscriptionId: resolvedInfo.marketplaceSubscriptionId,
+        features,
+      });
+
+      setSubscription(result);
+    } catch (err) {
+      console.error('Failed to submit feature selection:', err);
+      setError('Failed to submit feature selection. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Step 4: Finalize subscription
+  const handleFinalize = async () => {
+    if (!resolvedInfo) return;
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // First submit features if any are selected
+      await handleSubmitFeatures();
+
+      // Then finalize
+      const result = await marketplaceApi.finalizeSubscription({
+        marketplaceSubscriptionId: resolvedInfo.marketplaceSubscriptionId,
+      });
+
+      setSubscription(result);
+      setCurrentStep('thank-you');
+    } catch (err) {
+      console.error('Failed to finalize subscription:', err);
+      setError('Failed to finalize subscription. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Calculate total for enabled features
+  const calculateTotal = () => {
+    return availableFeatures
+      .filter((f) => f.isEnabled)
+      .reduce((sum, f) => sum + f.quantity * f.pricePerUnit, 0);
+  };
+
+  // Get step number for display
+  const getStepNumber = () => {
+    switch (currentStep) {
+      case 'resolving':
+        return 1;
+      case 'customer-info':
+        return 2;
+      case 'feature-selection':
+        return 3;
+      case 'thank-you':
+        return 4;
+      default:
+        return 1;
+    }
+  };
+
+  // Render step indicator
+  const renderStepIndicator = () => {
+    const steps = [
+      { num: 1, label: 'Verification' },
+      { num: 2, label: 'Your Details' },
+      { num: 3, label: 'Choose Tokens' },
+      { num: 4, label: 'Complete' },
+    ];
+
+    const currentNum = getStepNumber();
+
+    return (
+      <div className="ct-wizard-steps">
+        {steps.map((step, index) => (
+          <div
+            key={step.num}
+            className={`ct-wizard-step ${step.num < currentNum ? 'ct-wizard-step--completed' : ''} ${step.num === currentNum ? 'ct-wizard-step--active' : ''}`}
+          >
+            <div className="ct-wizard-step__number">
+              {step.num < currentNum ? '✓' : step.num}
+            </div>
+            <div className="ct-wizard-step__label">{step.label}</div>
+            {index < steps.length - 1 && <div className="ct-wizard-step__line" />}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  // Render resolving step
+  const renderResolvingStep = () => (
+    <Card>
+      <CardBody>
+        <div className="ct-resolving">
+          <div className="ct-spinner ct-spinner--large"></div>
+          <h2>Verifying your subscription...</h2>
+          <p>Please wait while we verify your Azure Marketplace purchase.</p>
+        </div>
+      </CardBody>
+    </Card>
+  );
+
+  // Render customer info form
+  const renderCustomerInfoStep = () => (
+    <Card>
+      <CardHeader>
+        <h2>Tell us about yourself</h2>
+      </CardHeader>
+      <CardBody>
+        {resolvedInfo && (
+          <div className="ct-resolved-info">
+            <div className="ct-resolved-info__item">
+              <span className="ct-resolved-info__label">Subscription:</span>
+              <span className="ct-resolved-info__value">{resolvedInfo.subscriptionName}</span>
+            </div>
+            <div className="ct-resolved-info__item">
+              <span className="ct-resolved-info__label">Plan:</span>
+              <span className="ct-resolved-info__value">{resolvedInfo.planId}</span>
+            </div>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmitCustomerInfo} className="ct-customer-form">
+          <div className="ct-form-row">
+            <div className="ct-input-group">
+              <label className="ct-label--primary">
+                Full Name <span className="ct-required">*</span>
+              </label>
+              <input
+                type="text"
+                className="ct-input--primary"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                required
+                placeholder="John Smith"
+              />
+            </div>
+            <div className="ct-input-group">
+              <label className="ct-label--primary">
+                Email Address <span className="ct-required">*</span>
+              </label>
+              <input
+                type="email"
+                className="ct-input--primary"
+                value={customerEmail}
+                onChange={(e) => setCustomerEmail(e.target.value)}
+                required
+                placeholder="john@company.com"
+              />
+            </div>
+          </div>
+
+          <div className="ct-form-row">
+            <div className="ct-input-group">
+              <label className="ct-label--primary">
+                Company Name <span className="ct-required">*</span>
+              </label>
+              <input
+                type="text"
+                className="ct-input--primary"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                required
+                placeholder="Acme Corporation"
+              />
+            </div>
+            <div className="ct-input-group">
+              <label className="ct-label--primary">Phone Number</label>
+              <input
+                type="tel"
+                className="ct-input--primary"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                placeholder="+1 (555) 123-4567"
+              />
+            </div>
+          </div>
+
+          <div className="ct-form-row">
+            <div className="ct-input-group">
+              <label className="ct-label--primary">Job Title</label>
+              <input
+                type="text"
+                className="ct-input--primary"
+                value={jobTitle}
+                onChange={(e) => setJobTitle(e.target.value)}
+                placeholder="IT Manager"
+              />
+            </div>
+            <div className="ct-input-group">
+              <label className="ct-label--primary">Country</label>
+              <input
+                type="text"
+                className="ct-input--primary"
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                placeholder="United States"
+              />
+            </div>
+          </div>
+
+          <div className="ct-input-group">
+            <label className="ct-label--primary">Additional Comments</label>
+            <textarea
+              className="ct-input--primary ct-textarea"
+              value={comments}
+              onChange={(e) => setComments(e.target.value)}
+              rows={3}
+              placeholder="Any special requirements or questions?"
+            />
+          </div>
+
+          <div className="ct-form-actions">
+            <Button type="submit" variant="primary" size="large" disabled={isLoading}>
+              {isLoading ? 'Saving...' : 'Continue to Token Selection'}
+            </Button>
+          </div>
+        </form>
+      </CardBody>
+    </Card>
+  );
+
+  // Render feature selection step
+  const renderFeatureSelectionStep = () => (
+    <Card>
+      <CardHeader>
+        <h2>Choose Your Tokens</h2>
+      </CardHeader>
+      <CardBody>
+        <p className="ct-feature-intro">
+          Enable the credential types you need and specify the quantity of tokens you want to purchase.
+          These will be added to your metered billing.
+        </p>
+
+        <div className="ct-feature-list">
+          {availableFeatures.map((feature) => (
+            <div
+              key={feature.featureId}
+              className={`ct-feature-card ${feature.isEnabled ? 'ct-feature-card--enabled' : ''}`}
+            >
+              <div className="ct-feature-card__header">
+                <label className="ct-feature-toggle">
+                  <input
+                    type="checkbox"
+                    checked={feature.isEnabled}
+                    onChange={() => handleToggleFeature(feature.featureId)}
+                  />
+                  <span className="ct-feature-toggle__slider"></span>
+                </label>
+                <div className="ct-feature-card__info">
+                  <h3>{feature.featureName}</h3>
+                  <p>{feature.description}</p>
+                </div>
+                <div className="ct-feature-card__price">
+                  ${feature.pricePerUnit.toFixed(2)}
+                  <span>/token</span>
+                </div>
+              </div>
+
+              {feature.isEnabled && (
+                <div className="ct-feature-card__body">
+                  <div className="ct-quantity-selector">
+                    <label>Quantity:</label>
+                    <div className="ct-quantity-input">
+                      <button
+                        type="button"
+                        onClick={() => handleQuantityChange(feature.featureId, feature.quantity - 100)}
+                        disabled={feature.quantity <= feature.minQuantity}
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        value={feature.quantity}
+                        onChange={(e) =>
+                          handleQuantityChange(feature.featureId, parseInt(e.target.value) || 0)
+                        }
+                        min={feature.minQuantity}
+                        max={feature.maxQuantity}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleQuantityChange(feature.featureId, feature.quantity + 100)}
+                        disabled={feature.quantity >= feature.maxQuantity}
+                      >
+                        +
+                      </button>
+                    </div>
+                    <span className="ct-quantity-range">
+                      ({feature.minQuantity.toLocaleString()} - {feature.maxQuantity.toLocaleString()})
+                    </span>
+                  </div>
+                  <div className="ct-feature-card__subtotal">
+                    Subtotal: <strong>${(feature.quantity * feature.pricePerUnit).toFixed(2)}</strong>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="ct-feature-summary">
+          <div className="ct-feature-summary__total">
+            <span>Estimated Monthly Total:</span>
+            <strong>${calculateTotal().toFixed(2)}</strong>
+          </div>
+          <p className="ct-feature-summary__note">
+            * Actual charges will be based on usage and billed through Azure Marketplace.
+          </p>
+        </div>
+
+        <div className="ct-form-actions">
+          <Button
+            variant="outline"
+            size="large"
+            onClick={() => setCurrentStep('customer-info')}
+            disabled={isLoading}
+          >
+            Back
+          </Button>
+          <Button
+            variant="primary"
+            size="large"
+            onClick={handleFinalize}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Processing...' : 'Finish Setup'}
+          </Button>
+        </div>
+      </CardBody>
+    </Card>
+  );
+
+  // Render thank you step
+  const renderThankYouStep = () => (
+    <Card>
+      <CardBody>
+        <div className="ct-thank-you">
+          <div className="ct-thank-you__icon">✓</div>
+          <h1>Thank You for Subscribing!</h1>
+          <p className="ct-thank-you__message">
+            Your subscription request has been submitted successfully.
+            Our team will review your information and contact you shortly to complete the setup.
+          </p>
+
+          {subscription && (
+            <div className="ct-thank-you__details">
+              <h3>Subscription Details</h3>
+              <div className="ct-thank-you__grid">
+                <div className="ct-thank-you__item">
+                  <span className="ct-thank-you__label">Company</span>
+                  <span className="ct-thank-you__value">{subscription.companyName}</span>
+                </div>
+                <div className="ct-thank-you__item">
+                  <span className="ct-thank-you__label">Contact</span>
+                  <span className="ct-thank-you__value">{subscription.customerName}</span>
+                </div>
+                <div className="ct-thank-you__item">
+                  <span className="ct-thank-you__label">Email</span>
+                  <span className="ct-thank-you__value">{subscription.customerEmail}</span>
+                </div>
+                <div className="ct-thank-you__item">
+                  <span className="ct-thank-you__label">Reference ID</span>
+                  <span className="ct-thank-you__value ct-thank-you__value--mono">
+                    {subscription.azureSubscriptionId}
+                  </span>
+                </div>
+              </div>
+
+              {subscription.featureSelections.length > 0 && (
+                <>
+                  <h3>Selected Features</h3>
+                  <div className="ct-thank-you__features">
+                    {subscription.featureSelections.map((f) => (
+                      <div key={f.featureId} className="ct-thank-you__feature">
+                        <span>{f.featureName}</span>
+                        <span>{f.quantity.toLocaleString()} tokens</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          <div className="ct-thank-you__next-steps">
+            <h3>What happens next?</h3>
+            <ol>
+              <li>Our team will review your subscription request</li>
+              <li>You will receive a confirmation email within 24 hours</li>
+              <li>We will contact you to complete the technical setup</li>
+              <li>Once activated, you can start using your credentials</li>
+            </ol>
+          </div>
+
+          <div className="ct-thank-you__contact">
+            <p>
+              Questions? Contact us at{' '}
+              <a href="mailto:support@comsigntrust.com">support@comsigntrust.com</a>
+            </p>
+          </div>
+        </div>
+      </CardBody>
+    </Card>
+  );
+
+  // Render current step
+  const renderCurrentStep = () => {
+    switch (currentStep) {
+      case 'resolving':
+        return renderResolvingStep();
+      case 'customer-info':
+        return renderCustomerInfoStep();
+      case 'feature-selection':
+        return renderFeatureSelectionStep();
+      case 'thank-you':
+        return renderThankYouStep();
+      default:
+        return null;
+    }
   };
 
   return (
-    <Layout>
-      <div className="ct-page-container">
-        <div className="ct-admin-header">
-          <h1 className="ct-admin-title">Azure Marketplace Landing Page</h1>
-          <span className="ct-badge ct-badge--warning">Development Only</span>
+    <Layout showSidebar={false}>
+      <div className="ct-azure-landing">
+        <div className="ct-azure-landing__header">
+          <img 
+            src="/logo_medium.png" 
+            alt="ComsignTrust" 
+            className="ct-azure-landing__logo"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+          <h1>ComsignTrust CMS</h1>
+          <p>Azure Marketplace Subscription Setup</p>
         </div>
-        
-        <p className="ct-admin-description">
-          This page receives query parameters from Azure Marketplace when customers access
-          your SaaS offer. Use this for development and testing of your subscription flow.
-        </p>
 
-        {/* Raw URL Display */}
-        <Card>
-          <CardHeader>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3>Raw URL</h3>
-              <button 
-                className="ct-button ct-button--small ct-button--outline"
-                onClick={() => copyToClipboard(rawUrl)}
-              >
-                Copy URL
-              </button>
-            </div>
-          </CardHeader>
-          <CardBody>
-            <div className="ct-code-block" style={{ 
-              backgroundColor: 'var(--ct-bg-tertiary)', 
-              padding: '1rem', 
-              borderRadius: '4px',
-              wordBreak: 'break-all',
-              fontFamily: 'monospace',
-              fontSize: '0.875rem'
-            }}>
-              {rawUrl}
-            </div>
-          </CardBody>
-        </Card>
+        {currentStep !== 'thank-you' && renderStepIndicator()}
 
-        {/* Parameters Table */}
-        <Card>
-          <CardHeader>
-            <h3>Query Parameters ({params.length})</h3>
-          </CardHeader>
-          <CardBody>
-            {params.length === 0 ? (
-              <div className="ct-empty-state">
-                <p>No query parameters received.</p>
-                <p className="ct-text-muted" style={{ marginTop: '0.5rem' }}>
-                  When Azure redirects users here, parameters will appear in this table.
-                </p>
-              </div>
-            ) : (
-              <table className="ct-table">
-                <thead>
-                  <tr>
-                    <th>Parameter</th>
-                    <th>Value</th>
-                    <th>Description</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {params.map((param, index) => (
-                    <tr key={index}>
-                      <td>
-                        <code style={{ 
-                          backgroundColor: 'var(--ct-bg-tertiary)', 
-                          padding: '0.25rem 0.5rem', 
-                          borderRadius: '4px' 
-                        }}>
-                          {param.key}
-                        </code>
-                      </td>
-                      <td>
-                        <div style={{ 
-                          maxWidth: '400px', 
-                          overflow: 'hidden', 
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
-                        }} title={param.value}>
-                          {param.value}
-                        </div>
-                      </td>
-                      <td className="ct-text-muted">
-                        {getParamDescription(param.key) || '-'}
-                      </td>
-                      <td>
-                        <button 
-                          className="ct-button ct-button--small ct-button--ghost"
-                          onClick={() => copyToClipboard(param.value)}
-                        >
-                          Copy
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </CardBody>
-        </Card>
-
-        {/* Token Instructions */}
-        {searchParams.has('token') && (
-          <Card>
-            <CardHeader>
-              <h3>Next Steps: Resolve Token</h3>
-            </CardHeader>
-            <CardBody>
-              <p style={{ marginBottom: '1rem' }}>
-                The <code>token</code> parameter needs to be resolved using the Azure Marketplace
-                SaaS Fulfillment API to get subscription details:
-              </p>
-              <div className="ct-code-block" style={{ 
-                backgroundColor: 'var(--ct-bg-tertiary)', 
-                padding: '1rem', 
-                borderRadius: '4px',
-                fontFamily: 'monospace',
-                fontSize: '0.875rem',
-                marginBottom: '1rem'
-              }}>
-                <div style={{ color: 'var(--ct-text-muted)' }}>// POST request to Azure API</div>
-                <div>POST https://marketplaceapi.microsoft.com/api/saas/subscriptions/resolve</div>
-                <div>?api-version=2018-08-31</div>
-                <div style={{ marginTop: '0.5rem' }}>x-ms-marketplace-token: {searchParams.get('token')?.substring(0, 50)}...</div>
-              </div>
-              <p className="ct-text-muted">
-                This will return the full subscription details including purchaser info, plan, and subscription ID.
-              </p>
-            </CardBody>
-          </Card>
+        {error && (
+          <div className="ct-azure-landing__error">
+            <span>⚠️</span>
+            <p>{error}</p>
+            <button onClick={() => setError(null)}>×</button>
+          </div>
         )}
 
-        {/* Expected Parameters Reference */}
-        <Card>
-          <CardHeader>
-            <h3>Expected Azure Parameters Reference</h3>
-          </CardHeader>
-          <CardBody>
-            <table className="ct-table">
-              <thead>
-                <tr>
-                  <th>Parameter</th>
-                  <th>Description</th>
-                  <th>Required</th>
-                </tr>
-              </thead>
-              <tbody>
-                {knownParams.map((param, index) => (
-                  <tr key={index}>
-                    <td><code>{param.key}</code></td>
-                    <td>{param.description}</td>
-                    <td>{param.key === 'token' ? 'Yes' : 'Optional'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </CardBody>
-        </Card>
-
-        {/* Path Info */}
-        <Card>
-          <CardHeader>
-            <h3>Route Information</h3>
-          </CardHeader>
-          <CardBody>
-            <table className="ct-table">
-              <tbody>
-                <tr>
-                  <td><strong>Pathname</strong></td>
-                  <td><code>{location.pathname}</code></td>
-                </tr>
-                <tr>
-                  <td><strong>Search</strong></td>
-                  <td><code>{location.search || '(empty)'}</code></td>
-                </tr>
-                <tr>
-                  <td><strong>Hash</strong></td>
-                  <td><code>{location.hash || '(empty)'}</code></td>
-                </tr>
-                <tr>
-                  <td><strong>Full URL</strong></td>
-                  <td><code>{window.location.href}</code></td>
-                </tr>
-              </tbody>
-            </table>
-          </CardBody>
-        </Card>
+        <div className="ct-azure-landing__content">{renderCurrentStep()}</div>
       </div>
     </Layout>
   );

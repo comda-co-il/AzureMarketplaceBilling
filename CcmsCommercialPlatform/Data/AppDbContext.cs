@@ -22,6 +22,16 @@ public class AppDbContext : DbContext
     /// </summary>
     public DbSet<AzureWebhookEvent> AzureWebhookEvents => Set<AzureWebhookEvent>();
     
+    /// <summary>
+    /// Stores marketplace subscriptions from Azure Marketplace signup flow
+    /// </summary>
+    public DbSet<MarketplaceSubscription> MarketplaceSubscriptions => Set<MarketplaceSubscription>();
+    
+    /// <summary>
+    /// Stores feature/token selections made during signup
+    /// </summary>
+    public DbSet<FeatureSelection> FeatureSelections => Set<FeatureSelection>();
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -84,6 +94,27 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => e.ReceivedAt);
             entity.HasIndex(e => e.SubscriptionId);
             entity.HasIndex(e => e.Action);
+        });
+        
+        // MarketplaceSubscription configuration
+        modelBuilder.Entity<MarketplaceSubscription>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.AzureSubscriptionId).IsUnique();
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.CreatedAt);
+            entity.HasMany(e => e.FeatureSelections)
+                .WithOne(f => f.MarketplaceSubscription)
+                .HasForeignKey(f => f.MarketplaceSubscriptionId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        // FeatureSelection configuration
+        modelBuilder.Entity<FeatureSelection>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.MarketplaceSubscriptionId, e.FeatureId });
+            entity.Property(e => e.PricePerUnit).HasPrecision(18, 2);
         });
     }
 }
