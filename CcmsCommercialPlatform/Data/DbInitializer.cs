@@ -8,22 +8,33 @@ public static class DbInitializer
 {
     public static void Initialize(AppDbContext context)
     {
-        // Create schema if it doesn't exist (for SQL Server with custom schema)
-        try
-        {
-            context.Database.ExecuteSqlRaw(@"
-                IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'CcmsCommercialPlatform')
-                BEGIN
-                    EXEC('CREATE SCHEMA [CcmsCommercialPlatform]')
-                END");
-        }
-        catch
-        {
-            // Ignore if not SQL Server or schema already exists
-        }
+        // Check if using SQLite (for local development)
+        var isSqlite = context.Database.ProviderName?.Contains("Sqlite") ?? false;
         
-        // Apply migrations or create database
-        context.Database.Migrate();
+        if (isSqlite)
+        {
+            // For SQLite, use EnsureCreated (migrations are SQL Server specific)
+            context.Database.EnsureCreated();
+        }
+        else
+        {
+            // Create schema if it doesn't exist (for SQL Server with custom schema)
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"
+                    IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'CcmsCommercialPlatform')
+                    BEGIN
+                        EXEC('CREATE SCHEMA [CcmsCommercialPlatform]')
+                    END");
+            }
+            catch
+            {
+                // Ignore if schema already exists
+            }
+            
+            // Apply migrations for SQL Server
+            context.Database.Migrate();
+        }
         
         // Check if data already exists
         try

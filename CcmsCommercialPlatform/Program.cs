@@ -13,16 +13,18 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // Configure database provider (SQLite or SqlServer)
+// Uses DefaultConnection from appsettings - Development uses SQLite, Production uses SqlServer
 var databaseProvider = builder.Configuration.GetValue<string>("DatabaseProvider") ?? "SQLite";
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     if (databaseProvider.Equals("SqlServer", StringComparison.OrdinalIgnoreCase))
     {
-        options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer"));
+        options.UseSqlServer(connectionString);
     }
     else
     {
-        options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
+        options.UseSqlite(connectionString);
     }
 });
 
