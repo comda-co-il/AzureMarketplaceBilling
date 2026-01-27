@@ -399,6 +399,25 @@ export function AzureLandingPage() {
           </div>
 
           <div className="ct-form-actions">
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="large" 
+              onClick={() => {
+                setCustomerName('Gal Cohen');
+                setCustomerEmail('galc@comda.co.il');
+                setCompanyName('Comda');
+                setPhoneNumber('+972 (50) 123-4567');
+                setJobTitle('Software Developer');
+                setCountryCode('IL'); // Israel
+                setCountryOther('');
+                setComments('Demo submission');
+                setCountryError('');
+                setCountryOtherError('');
+              }}
+            >
+              Fill All Fields
+            </Button>
             <Button type="submit" variant="primary" size="large" disabled={isLoading}>
               {isLoading ? 'Saving...' : 'Continue to Token Selection'}
             </Button>

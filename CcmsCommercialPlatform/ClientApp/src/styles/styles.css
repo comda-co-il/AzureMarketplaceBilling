@@ -577,6 +577,8 @@ a:hover {
   border: 1px solid var(--ct-gray-300);
   border-radius: var(--ct-radius-sm);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  background-color: var(--ct-white);
+  color: var(--ct-gray-900);
 }
 
 .ct-input--primary:focus,
