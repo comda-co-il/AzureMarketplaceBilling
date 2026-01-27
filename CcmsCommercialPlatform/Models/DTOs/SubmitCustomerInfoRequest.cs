@@ -24,7 +24,9 @@ public class SubmitCustomerInfoRequest
     
     public string JobTitle { get; set; } = string.Empty;
     
-    public string Country { get; set; } = string.Empty;
+    public string CountryCode { get; set; } = string.Empty;
+    
+    public string? CountryOther { get; set; }
     
     public string Comments { get; set; } = string.Empty;
 }

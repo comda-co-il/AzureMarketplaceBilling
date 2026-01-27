@@ -16,6 +16,18 @@ builder.Services.AddSwaggerGen(c =>
 // Uses DefaultConnection from appsettings - Development uses SQLite, Production uses SqlServer
 var databaseProvider = builder.Configuration.GetValue<string>("DatabaseProvider") ?? "SQLite";
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+// Ensure Development environment uses SQLite connection string
+// This workaround handles cases where appsettings.Development.json connection string override doesn't work
+if (builder.Environment.IsDevelopment() && databaseProvider.Equals("SQLite", StringComparison.OrdinalIgnoreCase))
+{
+    // Override connection string for Development if it's still pointing to SQL Server
+    if (connectionString != null && connectionString.Contains("Server=", StringComparison.OrdinalIgnoreCase))
+    {
+        connectionString = "Data Source=marketplace_billing.db";
+    }
+}
+
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     if (databaseProvider.Equals("SqlServer", StringComparison.OrdinalIgnoreCase))

@@ -613,6 +613,93 @@ a:hover {
 }
 
 /* ==========================================================================
+   Autocomplete Component
+   ========================================================================== */
+
+.ct-autocomplete {
+  position: relative;
+  width: 100%;
+}
+
+.ct-autocomplete__menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: var(--ct-white);
+  border: 1px solid var(--ct-gray-300);
+  border-radius: var(--ct-radius-sm);
+  box-shadow: var(--ct-shadow-lg);
+  margin-top: var(--ct-space-xs);
+  max-height: 300px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.ct-autocomplete__item {
+  display: flex;
+  align-items: center;
+  gap: var(--ct-space-sm);
+  padding: var(--ct-space-sm) var(--ct-space-md);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  border-bottom: 1px solid var(--ct-gray-200);
+}
+
+.ct-autocomplete__item:last-child {
+  border-bottom: none;
+}
+
+.ct-autocomplete__item:hover,
+.ct-autocomplete__item--active {
+  background-color: var(--ct-primary-light);
+  color: var(--ct-primary-dark);
+}
+
+.ct-autocomplete__flag {
+  font-size: var(--ct-font-size-lg);
+  width: 24px;
+  text-align: center;
+}
+
+.ct-autocomplete__name {
+  flex: 1;
+  font-size: var(--ct-font-size-md);
+  color: var(--ct-gray-900);
+}
+
+.ct-autocomplete__code {
+  font-size: var(--ct-font-size-sm);
+  color: var(--ct-gray-500);
+  font-family: 'Courier New', monospace;
+  padding: 2px 6px;
+  background: var(--ct-gray-200);
+  border-radius: var(--ct-radius-sm);
+}
+
+.ct-autocomplete__item--active .ct-autocomplete__name,
+.ct-autocomplete__item--active .ct-autocomplete__code {
+  color: var(--ct-primary-dark);
+}
+
+.ct-input--error {
+  border-color: var(--ct-error);
+}
+
+.ct-input--error:focus {
+  border-color: var(--ct-error);
+  box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1);
+}
+
+.ct-input-error {
+  color: var(--ct-error);
+  font-size: var(--ct-font-size-sm);
+  margin-top: var(--ct-space-xs);
+  display: block;
+}
+
+/* ==========================================================================
    Spinner Component
    ========================================================================== */
 

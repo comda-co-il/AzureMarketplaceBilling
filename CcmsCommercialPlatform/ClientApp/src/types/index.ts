@@ -196,7 +196,8 @@ export interface SubmitCustomerInfoRequest {
   companyName: string;
   phoneNumber?: string;
   jobTitle?: string;
-  country?: string;
+  countryCode?: string;
+  countryOther?: string;
   comments?: string;
 }
 

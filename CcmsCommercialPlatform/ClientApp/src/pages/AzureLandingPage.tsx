@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Layout } from '../components/Layout';
-import { Card, CardHeader, CardBody, Button } from '../components/Common';
+import { Card, CardHeader, CardBody, Button, CountryAutocomplete } from '../components/Common';
 import { marketplaceApi } from '../services/api';
 import type {
   ResolvedSubscriptionInfo,
@@ -16,6 +16,7 @@ interface FeatureState extends AvailableFeature {
   isEnabled: boolean;
   quantity: number;
 }
+
 
 export function AzureLandingPage() {
   const [searchParams] = useSearchParams();
@@ -37,7 +38,10 @@ export function AzureLandingPage() {
   const [companyName, setCompanyName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [jobTitle, setJobTitle] = useState('');
-  const [country, setCountry] = useState('');
+  const [countryCode, setCountryCode] = useState<string>('');
+  const [countryOther, setCountryOther] = useState<string>('');
+  const [countryError, setCountryError] = useState<string>('');
+  const [countryOtherError, setCountryOtherError] = useState<string>('');
   const [comments, setComments] = useState('');
 
   // Step 1: Resolve token on mount
@@ -86,6 +90,28 @@ export function AzureLandingPage() {
 
     if (!resolvedInfo) return;
 
+    // If no country is selected, default to "Other"
+    const finalCountryCode = countryCode || 'XX';
+    if (!countryCode) {
+      setCountryCode('XX');
+    }
+
+    // Validate country
+    let isValid = true;
+    setCountryError('');
+
+    // If "Other" is selected, validate that countryOther is filled
+    if (finalCountryCode === 'XX' && !countryOther.trim()) {
+      setCountryOtherError('Please specify your country');
+      isValid = false;
+    } else {
+      setCountryOtherError('');
+    }
+
+    if (!isValid) {
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
@@ -97,7 +123,8 @@ export function AzureLandingPage() {
         companyName,
         phoneNumber,
         jobTitle,
-        country,
+        countryCode: finalCountryCode,
+        countryOther: finalCountryCode === 'XX' ? countryOther : undefined,
         comments,
       });
 
@@ -342,13 +369,20 @@ export function AzureLandingPage() {
               />
             </div>
             <div className="ct-input-group">
-              <label className="ct-label--primary">Country</label>
-              <input
-                type="text"
-                className="ct-input--primary"
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                placeholder="United States"
+              <label className="ct-label--primary">
+                Country <span className="ct-required">*</span>
+              </label>
+              <CountryAutocomplete
+                countryCode={countryCode}
+                countryOther={countryOther}
+                onCountryCodeChange={setCountryCode}
+                onCountryOtherChange={setCountryOther}
+                countryError={countryError}
+                countryOtherError={countryOtherError}
+                onErrorClear={() => {
+                  setCountryError('');
+                  setCountryOtherError('');
+                }}
               />
             </div>
           </div>

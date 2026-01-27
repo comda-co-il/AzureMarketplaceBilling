@@ -114,7 +114,8 @@ public class MarketplaceSubscriptionService : IMarketplaceSubscriptionService
         subscription.CompanyName = request.CompanyName;
         subscription.PhoneNumber = request.PhoneNumber;
         subscription.JobTitle = request.JobTitle;
-        subscription.Country = request.Country;
+        subscription.CountryCode = request.CountryCode;
+        subscription.CountryOther = request.CountryOther;
         subscription.Comments = request.Comments;
         subscription.CustomerInfoSubmittedAt = DateTime.UtcNow;
         subscription.Status = MarketplaceSubscriptionStatus.PendingFeatureSelection;
@@ -212,7 +213,8 @@ public class MarketplaceSubscriptionService : IMarketplaceSubscriptionService
                         company = subscription.CompanyName,
                         phone = subscription.PhoneNumber,
                         jobTitle = subscription.JobTitle,
-                        country = subscription.Country,
+                        countryCode = subscription.CountryCode,
+                        countryOther = subscription.CountryOther,
                         comments = subscription.Comments
                     },
                     purchaser = new
@@ -300,7 +302,9 @@ public class MarketplaceSubscriptionService : IMarketplaceSubscriptionService
             CompanyName = subscription.CompanyName,
             PhoneNumber = subscription.PhoneNumber,
             JobTitle = subscription.JobTitle,
-            Country = subscription.Country,
+            Country = subscription.CountryCode == "XX" && !string.IsNullOrEmpty(subscription.CountryOther) 
+                ? subscription.CountryOther 
+                : subscription.CountryCode, // For backward compatibility in response
             Comments = subscription.Comments,
             Status = subscription.Status,
             StatusDisplay = GetStatusDisplay(subscription.Status),
