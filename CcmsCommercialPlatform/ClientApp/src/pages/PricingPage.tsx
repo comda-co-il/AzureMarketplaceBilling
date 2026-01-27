@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { Layout } from '../components/Layout';
 import { PlanCard } from '../components/Billing';
 import { Modal, Button, Alert } from '../components/Common';
@@ -9,7 +8,6 @@ import type { Plan, CreateSubscriptionRequest } from '../types';
 
 export function PricingPage() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +33,7 @@ export function PricingPage() {
       const data = await plansApi.getAll();
       setPlans(data);
     } catch (err) {
-      setError(t('errors.loadingPlans'));
+      setError('Failed to load plans');
       console.error(err);
     } finally {
       setLoading(false);
@@ -55,7 +53,7 @@ export function PricingPage() {
     e.preventDefault();
     
     if (!termsAccepted) {
-      setFormError(t('errors.generic'));
+      setFormError('An error occurred. Please try again.');
       return;
     }
 
@@ -65,7 +63,7 @@ export function PricingPage() {
       const subscription = await subscriptionsApi.create(formData);
       navigate(`/subscription-success/${subscription.id}`);
     } catch (err) {
-      setFormError(t('errors.creatingSubscription'));
+      setFormError('Failed to create subscription');
       console.error(err);
     } finally {
       setSubmitting(false);
@@ -90,7 +88,7 @@ export function PricingPage() {
       <Layout>
         <div className="ct-pricing ct-pricing--loading">
           <div className="ct-spinner ct-spinner--large"></div>
-          <p>{t('common.loading')}</p>
+          <p>Loading...</p>
         </div>
       </Layout>
     );
@@ -101,7 +99,7 @@ export function PricingPage() {
       <Layout>
         <div className="ct-pricing ct-pricing--error">
           <Alert type="error" message={error} autoClose={false} />
-          <Button onClick={loadPlans}>{t('common.submit')}</Button>
+          <Button onClick={loadPlans}>Submit</Button>
         </div>
       </Layout>
     );
@@ -111,9 +109,9 @@ export function PricingPage() {
     <Layout>
       <div className="ct-pricing">
         <header className="ct-pricing__header">
-          <h1 className="ct-pricing__title">{t('pricing.title')}</h1>
+          <h1 className="ct-pricing__title">Choose Your Plan</h1>
           <p className="ct-pricing__subtitle">
-            {t('pricing.subtitle')}
+            Select the perfect plan for your credential management needs
           </p>
         </header>
 
@@ -130,7 +128,7 @@ export function PricingPage() {
         <Modal
           isOpen={isModalOpen}
           onClose={closeModal}
-          title={t('subscription.title', { plan: selectedPlan?.name })}
+          title={`Subscribe to ${selectedPlan?.name}`}
           size="medium"
         >
           <form onSubmit={handleSubmit} className="ct-signup-form">
@@ -141,12 +139,12 @@ export function PricingPage() {
             <div className="ct-signup-form__plan-summary">
               <h3>{selectedPlan?.name}</h3>
               <p className="ct-signup-form__price">
-                ${selectedPlan?.monthlyPrice}/{t('common.month')}
+                ${selectedPlan?.monthlyPrice}/month
               </p>
             </div>
 
             <div className="ct-input-group">
-              <label className="ct-label--primary">{t('subscription.form.companyName')} *</label>
+              <label className="ct-label--primary">Company Name *</label>
               <input
                 type="text"
                 className="ct-input--primary"
@@ -155,12 +153,12 @@ export function PricingPage() {
                   setFormData({ ...formData, companyName: e.target.value })
                 }
                 required
-                placeholder={t('subscription.form.companyPlaceholder')}
+                placeholder="Enter your company name"
               />
             </div>
 
             <div className="ct-input-group">
-              <label className="ct-label--primary">{t('subscription.form.customerName')} *</label>
+              <label className="ct-label--primary">Full Name *</label>
               <input
                 type="text"
                 className="ct-input--primary"
@@ -169,12 +167,12 @@ export function PricingPage() {
                   setFormData({ ...formData, customerName: e.target.value })
                 }
                 required
-                placeholder={t('subscription.form.namePlaceholder')}
+                placeholder="Enter your full name"
               />
             </div>
 
             <div className="ct-input-group">
-              <label className="ct-label--primary">{t('subscription.form.customerEmail')} *</label>
+              <label className="ct-label--primary">Email Address *</label>
               <input
                 type="email"
                 className="ct-input--primary"
@@ -183,7 +181,7 @@ export function PricingPage() {
                   setFormData({ ...formData, customerEmail: e.target.value })
                 }
                 required
-                placeholder={t('subscription.form.emailPlaceholder')}
+                placeholder="Enter your email address"
               />
             </div>
 
@@ -195,17 +193,17 @@ export function PricingPage() {
                   onChange={(e) => setTermsAccepted(e.target.checked)}
                 />
                 <span className="ct-checkbox__label">
-                  {t('common.yes')}
+                  Yes
                 </span>
               </label>
             </div>
 
             <div className="ct-signup-form__actions">
               <Button variant="outline" type="button" onClick={closeModal}>
-                {t('common.cancel')}
+                Cancel
               </Button>
               <Button variant="primary" type="submit" loading={submitting}>
-                {t('common.submit')}
+                Submit
               </Button>
             </div>
           </form>

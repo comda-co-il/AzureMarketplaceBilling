@@ -1,5 +1,4 @@
 import { useParams, Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { Layout } from '../components/Layout';
 import { UsageHistory } from '../components/Billing';
 import { Card, CardHeader, CardBody, Button } from '../components/Common';
@@ -7,7 +6,6 @@ import { useSubscription } from '../hooks/useSubscription';
 
 export function UsagePage() {
   const { id } = useParams<{ id: string }>();
-  const { t } = useTranslation();
   const { subscription, loading, error } = useSubscription(id);
 
   if (loading) {
@@ -15,7 +13,7 @@ export function UsagePage() {
       <Layout showSidebar subscriptionId={id}>
         <div className="ct-usage-page ct-usage-page--loading">
           <div className="ct-spinner ct-spinner--large"></div>
-          <p>{t('common.loading')}</p>
+          <p>Loading...</p>
         </div>
       </Layout>
     );
@@ -25,10 +23,10 @@ export function UsagePage() {
     return (
       <Layout>
         <div className="ct-usage-page ct-usage-page--error">
-          <h1>{t('usage.title')}</h1>
-          <p>{error || t('errors.loadingSubscription')}</p>
+          <h1>Usage History</h1>
+          <p>{error || 'Failed to load subscription'}</p>
           <Link to="/pricing">
-            <Button>{t('nav.pricing')}</Button>
+            <Button>Pricing</Button>
           </Link>
         </div>
       </Layout>
@@ -40,19 +38,19 @@ export function UsagePage() {
       <div className="ct-usage-page">
         <header className="ct-usage-page__header">
           <div>
-            <h1 className="ct-usage-page__title">{t('usage.title')}</h1>
+            <h1 className="ct-usage-page__title">Usage History</h1>
             <p className="ct-usage-page__subtitle">
               {subscription.companyName} - {subscription.plan?.name}
             </p>
           </div>
           <Link to={`/dashboard/${id}`}>
-            <Button variant="outline">{t('common.back')}</Button>
+            <Button variant="outline">Back</Button>
           </Link>
         </header>
 
         <Card>
           <CardHeader>
-            <h2>{t('usage.title')}</h2>
+            <h2>Usage History</h2>
           </CardHeader>
           <CardBody>
             <UsageHistory subscriptionId={id!} />

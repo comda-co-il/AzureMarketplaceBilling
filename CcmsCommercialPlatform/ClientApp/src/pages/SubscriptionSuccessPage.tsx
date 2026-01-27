@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { Layout } from '../components/Layout';
 import { Button, Card, CardBody } from '../components/Common';
 import { subscriptionsApi } from '../services/api';
@@ -9,7 +8,6 @@ import type { Subscription } from '../types';
 export function SubscriptionSuccessPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +24,7 @@ export function SubscriptionSuccessPage() {
       const data = await subscriptionsApi.getById(id!);
       setSubscription(data);
     } catch (err) {
-      setError(t('errors.loadingSubscription'));
+      setError('Failed to load subscription');
       console.error(err);
     } finally {
       setLoading(false);
@@ -34,7 +32,7 @@ export function SubscriptionSuccessPage() {
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString(i18n.language === 'he' ? 'he-IL' : 'en-US');
+    return new Date(date).toLocaleDateString('en-US');
   };
 
   if (loading) {
@@ -42,7 +40,7 @@ export function SubscriptionSuccessPage() {
       <Layout>
         <div className="ct-success ct-success--loading">
           <div className="ct-spinner ct-spinner--large"></div>
-          <p>{t('common.loading')}</p>
+          <p>Loading...</p>
         </div>
       </Layout>
     );
@@ -52,10 +50,10 @@ export function SubscriptionSuccessPage() {
     return (
       <Layout>
         <div className="ct-success ct-success--error">
-          <h1>{t('common.error')}</h1>
-          <p>{error || t('errors.loadingSubscription')}</p>
+          <h1>Error</h1>
+          <p>{error || 'Failed to load subscription'}</p>
           <Button onClick={() => navigate('/pricing')}>
-            {t('nav.pricing')}
+            Pricing
           </Button>
         </div>
       </Layout>
@@ -66,59 +64,59 @@ export function SubscriptionSuccessPage() {
     <Layout>
       <div className="ct-success">
         <div className="ct-success__icon">✓</div>
-        <h1 className="ct-success__title">{t('subscription.success.title')}</h1>
+        <h1 className="ct-success__title">Subscription Successful!</h1>
         <p className="ct-success__subtitle">
-          {t('subscription.success.message')}
+          Welcome to ComsignTrust! Your subscription has been activated.
         </p>
 
         <Card className="ct-success__details">
           <CardBody>
-            <h2>{t('common.details')}</h2>
+            <h2>Details</h2>
             <div className="ct-success__info-grid">
               <div className="ct-success__info-item">
-                <span className="ct-success__info-label">{t('subscription.success.subscriptionId')}</span>
+                <span className="ct-success__info-label">Subscription ID</span>
                 <span className="ct-success__info-value ct-success__info-value--mono">
                   {subscription.id}
                 </span>
               </div>
               <div className="ct-success__info-item">
-                <span className="ct-success__info-label">{t('subscription.form.companyName')}</span>
+                <span className="ct-success__info-label">Company Name</span>
                 <span className="ct-success__info-value">
                   {subscription.companyName}
                 </span>
               </div>
               <div className="ct-success__info-item">
-                <span className="ct-success__info-label">{t('subscription.form.customerName')}</span>
+                <span className="ct-success__info-label">Full Name</span>
                 <span className="ct-success__info-value">
                   {subscription.customerName}
                 </span>
               </div>
               <div className="ct-success__info-item">
-                <span className="ct-success__info-label">{t('subscription.form.customerEmail')}</span>
+                <span className="ct-success__info-label">Email Address</span>
                 <span className="ct-success__info-value">
                   {subscription.customerEmail}
                 </span>
               </div>
               <div className="ct-success__info-item">
-                <span className="ct-success__info-label">{t('subscription.success.plan')}</span>
+                <span className="ct-success__info-label">Plan</span>
                 <span className="ct-success__info-value ct-success__info-value--highlight">
                   {subscription.plan?.name}
                 </span>
               </div>
               <div className="ct-success__info-item">
-                <span className="ct-success__info-label">{t('common.price')}</span>
+                <span className="ct-success__info-label">Price</span>
                 <span className="ct-success__info-value">
-                  ${subscription.plan?.monthlyPrice}/{t('common.month')}
+                  ${subscription.plan?.monthlyPrice}/month
                 </span>
               </div>
               <div className="ct-success__info-item">
-                <span className="ct-success__info-label">{t('common.date')}</span>
+                <span className="ct-success__info-label">Date</span>
                 <span className="ct-success__info-value">
                   {formatDate(subscription.startDate)}
                 </span>
               </div>
               <div className="ct-success__info-item">
-                <span className="ct-success__info-label">{t('subscription.success.billingPeriod')}</span>
+                <span className="ct-success__info-label">Billing Period</span>
                 <span className="ct-success__info-value">
                   {formatDate(subscription.billingPeriodStart)} - {formatDate(subscription.billingPeriodEnd)}
                 </span>
@@ -133,19 +131,19 @@ export function SubscriptionSuccessPage() {
             size="large"
             onClick={() => navigate(`/dashboard/${subscription.id}`)}
           >
-            {t('subscription.success.goToDashboard')}
+            Go to Dashboard
           </Button>
           <Button
             variant="outline"
             size="large"
             onClick={() => navigate('/pricing')}
           >
-            {t('nav.pricing')}
+            Pricing
           </Button>
         </div>
 
         <p className="ct-success__note">
-          💡 {t('subscription.success.subscriptionId')}
+          💡 Subscription ID
         </p>
       </div>
     </Layout>

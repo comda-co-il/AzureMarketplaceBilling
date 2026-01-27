@@ -1,20 +1,18 @@
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { Layout } from '../components/Layout';
 import { Button } from '../components/Common';
 
 export function LandingPage() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
 
   const features = [
-    { icon: '🔐', titleKey: 'pki', title: t('dimensions.pki'), description: t('landing.features.subscription.description') },
-    { icon: '🖨️', titleKey: 'print', title: t('dimensions.print'), description: t('landing.features.metered.description') },
-    { icon: '💳', titleKey: 'desfire', title: t('dimensions.desfire'), description: t('landing.features.realtime.description') },
-    { icon: '📡', titleKey: 'prox', title: t('dimensions.prox'), description: t('landing.features.azure.description') },
-    { icon: '👆', titleKey: 'biometric', title: t('dimensions.biometric'), description: t('landing.features.subscription.description') },
-    { icon: '📱', titleKey: 'wallet', title: t('dimensions.wallet'), description: t('landing.features.metered.description') },
-    { icon: '🔑', titleKey: 'fido', title: t('dimensions.fido'), description: t('landing.features.realtime.description') },
+    { icon: '🔐', titleKey: 'pki', title: 'PKI', description: 'Complete subscription lifecycle management with Azure Marketplace integration.' },
+    { icon: '🖨️', titleKey: 'print', title: 'Print', description: 'Track usage across 7 credential dimensions with automatic overage calculation.' },
+    { icon: '💳', titleKey: 'desfire', title: 'DESFire', description: 'Monitor usage in real-time with visual progress indicators and alerts.' },
+    { icon: '📡', titleKey: 'prox', title: 'Prox', description: 'Seamless integration with Azure Marketplace Metered Billing APIs.' },
+    { icon: '👆', titleKey: 'biometric', title: 'Biometric', description: 'Complete subscription lifecycle management with Azure Marketplace integration.' },
+    { icon: '📱', titleKey: 'wallet', title: 'Wallet', description: 'Track usage across 7 credential dimensions with automatic overage calculation.' },
+    { icon: '🔑', titleKey: 'fido', title: 'FIDO', description: 'Monitor usage in real-time with visual progress indicators and alerts.' },
   ];
 
   return (
@@ -27,10 +25,10 @@ export function LandingPage() {
               ComsignTrust <span className="ct-hero__highlight">CMS</span>
             </h1>
             <h2 className="ct-hero__subtitle">
-              {t('landing.hero.title')} - {t('landing.hero.subtitle')}
+              Azure Marketplace - Billing Demo
             </h2>
             <p className="ct-hero__description">
-              {t('landing.hero.description')}
+              Experience the complete Azure Marketplace SaaS billing flow with metered usage tracking, overage calculations, and real-time billing simulation.
             </p>
             <div className="ct-hero__actions">
               <Button
@@ -38,14 +36,14 @@ export function LandingPage() {
                 size="large"
                 onClick={() => navigate('/pricing')}
               >
-                {t('landing.hero.viewPricing')}
+                View Pricing
               </Button>
               <Button
                 variant="outline"
                 size="large"
                 onClick={() => navigate('/pricing')}
               >
-                {t('landing.hero.learnMore')}
+                Learn More
               </Button>
             </div>
           </div>
@@ -61,10 +59,10 @@ export function LandingPage() {
         {/* Features Section */}
         <section className="ct-features">
           <h2 className="ct-features__title">
-            {t('landing.features.title')}
+            Platform Features
           </h2>
           <p className="ct-features__subtitle">
-            {t('landing.demo.description')}
+            This application runs in demo mode, simulating Azure Marketplace billing without requiring actual Azure credentials. Perfect for testing and demonstration purposes.
           </p>
           <div className="ct-features__grid">
             {features.map((feature, index) => (
@@ -80,16 +78,16 @@ export function LandingPage() {
         {/* CTA Section */}
         <section className="ct-cta">
           <div className="ct-cta__content">
-            <h2 className="ct-cta__title">{t('landing.demo.title')}</h2>
+            <h2 className="ct-cta__title">Demo Mode</h2>
             <p className="ct-cta__description">
-              {t('landing.demo.description')}
+              This application runs in demo mode, simulating Azure Marketplace billing without requiring actual Azure credentials. Perfect for testing and demonstration purposes.
             </p>
             <Button
               variant="primary"
               size="large"
               onClick={() => navigate('/pricing')}
             >
-              {t('landing.hero.viewPricing')}
+              View Pricing
             </Button>
           </div>
         </section>
@@ -98,7 +96,7 @@ export function LandingPage() {
         <footer className="ct-footer">
           <p className="ct-footer__text">
             © 2026 ComsignTrust. | 
-            <span className="ct-footer__demo"> {t('landing.demo.title')}</span>
+            <span className="ct-footer__demo"> Demo Mode</span>
           </p>
         </footer>
       </div>

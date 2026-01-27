@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { Layout } from '../components/Layout';
 import { UsageBar } from '../components/Billing';
 import { Card, CardBody, CardHeader, Button, Alert } from '../components/Common';
@@ -9,7 +8,6 @@ import { TokenUsageType, TokenUsageTypeNames, SubscriptionStatus } from '../type
 
 export function DashboardPage() {
   const { id } = useParams<{ id: string }>();
-  const { t, i18n } = useTranslation();
   const { subscription, usage, loading, error, recordUsage, startNewBillingPeriod } = useSubscription(id);
   
   const [selectedDimension, setSelectedDimension] = useState<TokenUsageType>(TokenUsageType.Pki);
@@ -18,18 +16,9 @@ export function DashboardPage() {
   const [alertMessage, setAlertMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [resettingPeriod, setResettingPeriod] = useState(false);
 
-  // Translated dimension names
+  // Get dimension name
   const getDimensionName = (type: TokenUsageType) => {
-    const keys: Record<TokenUsageType, string> = {
-      [TokenUsageType.Print]: 'dimensions.print',
-      [TokenUsageType.Pki]: 'dimensions.pki',
-      [TokenUsageType.Desfire]: 'dimensions.desfire',
-      [TokenUsageType.Prox]: 'dimensions.prox',
-      [TokenUsageType.Biometric]: 'dimensions.biometric',
-      [TokenUsageType.Wallet]: 'dimensions.wallet',
-      [TokenUsageType.Fido]: 'dimensions.fido',
-    };
-    return t(keys[type]);
+    return TokenUsageTypeNames[type];
   };
 
   const handleRecordUsage = async () => {
@@ -37,9 +26,9 @@ export function DashboardPage() {
       setRecording(true);
       setAlertMessage(null);
       await recordUsage(selectedDimension, quantity);
-      setAlertMessage({ type: 'success', message: `${t('common.success')}: ${quantity} ${getDimensionName(selectedDimension)}` });
+      setAlertMessage({ type: 'success', message: `Success: ${quantity} ${getDimensionName(selectedDimension)}` });
     } catch (err) {
-      setAlertMessage({ type: 'error', message: t('errors.recordingUsage') });
+      setAlertMessage({ type: 'error', message: 'Failed to record usage' });
       console.error(err);
     } finally {
       setRecording(false);
@@ -47,7 +36,7 @@ export function DashboardPage() {
   };
 
   const handleNewBillingPeriod = async () => {
-    if (!window.confirm(t('dashboard.resetBilling') + '?')) {
+    if (!window.confirm('Reset Billing Period?')) {
       return;
     }
     
@@ -55,9 +44,9 @@ export function DashboardPage() {
       setResettingPeriod(true);
       setAlertMessage(null);
       await startNewBillingPeriod();
-      setAlertMessage({ type: 'success', message: t('common.success') });
+      setAlertMessage({ type: 'success', message: 'Success' });
     } catch (err) {
-      setAlertMessage({ type: 'error', message: t('errors.generic') });
+      setAlertMessage({ type: 'error', message: 'An error occurred. Please try again.' });
       console.error(err);
     } finally {
       setResettingPeriod(false);
@@ -69,7 +58,7 @@ export function DashboardPage() {
       <Layout showSidebar subscriptionId={id}>
         <div className="ct-dashboard ct-dashboard--loading">
           <div className="ct-spinner ct-spinner--large"></div>
-          <p>{t('common.loading')}</p>
+          <p>Loading...</p>
         </div>
       </Layout>
     );
@@ -79,10 +68,10 @@ export function DashboardPage() {
     return (
       <Layout>
         <div className="ct-dashboard ct-dashboard--error">
-          <h1>{t('dashboard.title')}</h1>
-          <p>{error || t('errors.loadingSubscription')}</p>
+          <h1>Dashboard</h1>
+          <p>{error || 'Failed to load subscription'}</p>
           <p className="ct-dashboard__hint">
-            <Link to="/pricing">{t('nav.pricing')}</Link>
+            <Link to="/pricing">Pricing</Link>
           </p>
         </div>
       </Layout>
@@ -90,9 +79,9 @@ export function DashboardPage() {
   }
 
   const statusLabel = {
-    [SubscriptionStatus.Active]: t('subscription.status.active'),
-    [SubscriptionStatus.Suspended]: t('subscription.status.suspended'),
-    [SubscriptionStatus.Cancelled]: t('subscription.status.cancelled'),
+    [SubscriptionStatus.Active]: 'Active',
+    [SubscriptionStatus.Suspended]: 'Suspended',
+    [SubscriptionStatus.Cancelled]: 'Cancelled',
   };
 
   const statusClass = {
@@ -102,7 +91,7 @@ export function DashboardPage() {
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString(i18n.language === 'he' ? 'he-IL' : 'en-US');
+    return new Date(date).toLocaleDateString('en-US');
   };
 
   return (
@@ -125,13 +114,13 @@ export function DashboardPage() {
                 {statusLabel[subscription.status]}
               </span>
               <span className="ct-dashboard__plan">
-                {subscription.plan?.name} - ${subscription.plan?.monthlyPrice}/{t('common.month')}
+                {subscription.plan?.name} - ${subscription.plan?.monthlyPrice}/month
               </span>
             </div>
           </div>
           <div className="ct-dashboard__header-actions">
             <Link to={`/dashboard/${id}/history`}>
-              <Button variant="outline">{t('nav.usage')}</Button>
+              <Button variant="outline">Usage History</Button>
             </Link>
           </div>
         </header>
@@ -141,26 +130,26 @@ export function DashboardPage() {
           <CardBody>
             <div className="ct-billing-period">
               <div className="ct-billing-period__info">
-                <h3>{t('dashboard.billingPeriod')}</h3>
+                <h3>Billing Period</h3>
                 <p>
                   {formatDate(usage.billingPeriodStart)} - {formatDate(usage.billingPeriodEnd)}
                 </p>
               </div>
               <div className="ct-billing-period__summary">
                 <div className="ct-billing-period__item">
-                  <span className="ct-billing-period__label">{t('dashboard.basePrice')}</span>
+                  <span className="ct-billing-period__label">Base Price</span>
                   <span className="ct-billing-period__value">
                     ${subscription.plan?.monthlyPrice.toFixed(2)}
                   </span>
                 </div>
                 <div className="ct-billing-period__item">
-                  <span className="ct-billing-period__label">{t('dashboard.overageCharges')}</span>
+                  <span className="ct-billing-period__label">Overage Charges</span>
                   <span className="ct-billing-period__value ct-billing-period__value--overage">
                     ${usage.totalOverageCharges.toFixed(2)}
                   </span>
                 </div>
                 <div className="ct-billing-period__item ct-billing-period__item--total">
-                  <span className="ct-billing-period__label">{t('dashboard.estimatedTotal')}</span>
+                  <span className="ct-billing-period__label">Estimated Total</span>
                   <span className="ct-billing-period__value">
                     ${((subscription.plan?.monthlyPrice || 0) + usage.totalOverageCharges).toFixed(2)}
                   </span>
@@ -173,7 +162,7 @@ export function DashboardPage() {
         {/* Usage Overview */}
         <Card className="ct-dashboard__usage">
           <CardHeader>
-            <h2>{t('dashboard.usageSummary')}</h2>
+            <h2>Usage Summary</h2>
           </CardHeader>
           <CardBody>
             <div className="ct-usage-grid">
@@ -187,17 +176,17 @@ export function DashboardPage() {
         {/* Demo Controls */}
         <Card className="ct-dashboard__demo-controls">
           <CardHeader>
-            <h2>🧪 {t('dashboard.demoControls')}</h2>
-            <span className="ct-demo-badge">{t('landing.demo.title')}</span>
+            <h2>🧪 Demo Controls</h2>
+            <span className="ct-demo-badge">Demo Mode</span>
           </CardHeader>
           <CardBody>
             <p className="ct-demo-controls__description">
-              {t('landing.demo.description')}
+              This application runs in demo mode, simulating Azure Marketplace billing without requiring actual Azure credentials. Perfect for testing and demonstration purposes.
             </p>
             
             <div className="ct-demo-controls__form">
               <div className="ct-input-group">
-                <label className="ct-label--primary">{t('dashboard.simulation.dimension')}</label>
+                <label className="ct-label--primary">Credential Type</label>
                 <select
                   className="ct-input--primary"
                   value={selectedDimension}
@@ -212,7 +201,7 @@ export function DashboardPage() {
               </div>
               
               <div className="ct-input-group">
-                <label className="ct-label--primary">{t('dashboard.simulation.quantity')}</label>
+                <label className="ct-label--primary">Quantity</label>
                 <input
                   type="number"
                   className="ct-input--primary"
@@ -228,21 +217,21 @@ export function DashboardPage() {
                 onClick={handleRecordUsage}
                 loading={recording}
               >
-                {t('dashboard.simulateUsage')}
+                Simulate Usage
               </Button>
             </div>
 
             <div className="ct-demo-controls__divider"></div>
 
             <div className="ct-demo-controls__period">
-              <h3>{t('dashboard.billingPeriod')}</h3>
-              <p>{t('landing.demo.description')}</p>
+              <h3>Billing Period</h3>
+              <p>This application runs in demo mode, simulating Azure Marketplace billing without requiring actual Azure credentials. Perfect for testing and demonstration purposes.</p>
               <Button
                 variant="outline"
                 onClick={handleNewBillingPeriod}
                 loading={resettingPeriod}
               >
-                {t('dashboard.resetBilling')}
+                Reset Billing Period
               </Button>
             </div>
           </CardBody>

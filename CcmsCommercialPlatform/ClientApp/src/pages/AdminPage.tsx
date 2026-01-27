@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { Layout } from '../components/Layout';
 import { Card, CardHeader, CardBody, Button, Table, Modal, Alert } from '../components/Common';
 import { adminApi } from '../services/api';
@@ -9,7 +8,6 @@ import { SubscriptionStatus } from '../types';
 
 export function AdminPage() {
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState<string | null>(null);
@@ -40,7 +38,7 @@ export function AdminPage() {
     if (valid) {
       setIsAuthenticated(true);
     } else {
-      setAuthError(t('admin.invalidPassword'));
+      setAuthError('Invalid password');
     }
     setAuthenticating(false);
   };
@@ -64,29 +62,29 @@ export function AdminPage() {
   };
 
   const statusLabel = {
-    [SubscriptionStatus.Active]: t('subscription.status.active'),
-    [SubscriptionStatus.Suspended]: t('subscription.status.suspended'),
-    [SubscriptionStatus.Cancelled]: t('subscription.status.cancelled'),
+    [SubscriptionStatus.Active]: 'Active',
+    [SubscriptionStatus.Suspended]: 'Suspended',
+    [SubscriptionStatus.Cancelled]: 'Cancelled',
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString(i18n.language === 'he' ? 'he-IL' : 'en-US');
+    return new Date(date).toLocaleDateString('en-US');
   };
 
   const formatDateTime = (date: string) => {
-    return new Date(date).toLocaleString(i18n.language === 'he' ? 'he-IL' : 'en-US');
+    return new Date(date).toLocaleString('en-US');
   };
 
   const subscriptionColumns = [
-    { key: 'companyName', header: t('admin.subscriptionTable.company') },
+    { key: 'companyName', header: 'Company' },
     { 
       key: 'plan', 
-      header: t('admin.subscriptionTable.plan'),
+      header: 'Plan',
       render: (sub: Subscription) => sub.plan?.name || sub.planId,
     },
     { 
       key: 'status', 
-      header: t('admin.subscriptionTable.status'),
+      header: 'Status',
       render: (sub: Subscription) => (
         <span className={`ct-status-badge ct-status-badge--${SubscriptionStatus[sub.status].toLowerCase()}`}>
           {statusLabel[sub.status]}
@@ -95,12 +93,12 @@ export function AdminPage() {
     },
     { 
       key: 'startDate', 
-      header: t('admin.subscriptionTable.startDate'),
+      header: 'Start Date',
       render: (sub: Subscription) => formatDate(sub.startDate),
     },
     { 
       key: 'customerEmail', 
-      header: t('admin.subscriptionTable.customer'),
+      header: 'Customer',
       render: (sub: Subscription) => sub.customerEmail,
     },
   ];
@@ -108,24 +106,24 @@ export function AdminPage() {
   const eventColumns = [
     { 
       key: 'createdAt', 
-      header: t('admin.billingTable.date'),
+      header: 'Date',
       render: (event: UsageEvent) => formatDateTime(event.createdAt),
     },
     { 
       key: 'resourceId', 
-      header: t('admin.billingTable.subscription'),
+      header: 'Subscription',
       render: (event: UsageEvent) => event.resourceId.substring(0, 8) + '...',
     },
-    { key: 'dimension', header: t('admin.billingTable.dimension') },
-    { key: 'quantity', header: t('admin.billingTable.quantity') },
+    { key: 'dimension', header: 'Dimension' },
+    { key: 'quantity', header: 'Quantity' },
     { 
       key: 'amount', 
-      header: t('admin.billingTable.amount'),
+      header: 'Amount',
       render: (event: UsageEvent) => `$${event.amount.toFixed(2)}`,
     },
     { 
       key: 'status', 
-      header: t('admin.billingTable.status'),
+      header: 'Status',
       render: (event: UsageEvent) => (
         <span className={`ct-status-badge ct-status-badge--${event.status.toLowerCase()}`}>
           {event.status}
@@ -140,7 +138,7 @@ export function AdminPage() {
         <div className="ct-admin-login">
           <Card className="ct-admin-login__card">
             <CardHeader>
-              <h1>{t('admin.title')}</h1>
+              <h1>Admin Dashboard</h1>
             </CardHeader>
             <CardBody>
               <form onSubmit={handleLogin} className="ct-admin-login__form">
@@ -148,18 +146,18 @@ export function AdminPage() {
                   <Alert type="error" message={authError} autoClose={false} />
                 )}
                 <div className="ct-input-group">
-                  <label className="ct-label--primary">{t('admin.password')}</label>
+                  <label className="ct-label--primary">Enter Admin Password</label>
                   <input
                     type="password"
                     className="ct-input--primary"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder={t('admin.passwordPlaceholder')}
+                    placeholder="Password"
                     required
                   />
                 </div>
                 <Button variant="primary" type="submit" loading={authenticating}>
-                  {t('admin.login')}
+                  Login
                 </Button>
               </form>
             </CardBody>
@@ -174,7 +172,7 @@ export function AdminPage() {
       <Layout>
         <div className="ct-admin ct-admin--loading">
           <div className="ct-spinner ct-spinner--large"></div>
-          <p>{t('common.loading')}</p>
+          <p>Loading...</p>
         </div>
       </Layout>
     );
@@ -184,9 +182,9 @@ export function AdminPage() {
     <Layout>
       <div className="ct-admin">
         <header className="ct-admin__header">
-          <h1 className="ct-admin__title">{t('admin.title')}</h1>
+          <h1 className="ct-admin__title">Admin Dashboard</h1>
           <Button variant="outline" onClick={loadData} disabled={loading}>
-            {loading ? t('common.loading') : t('common.submit')}
+            {loading ? 'Loading...' : 'Submit'}
           </Button>
         </header>
 
@@ -196,7 +194,7 @@ export function AdminPage() {
             <CardBody>
               <div className="ct-stat-card__icon">📊</div>
               <div className="ct-stat-card__value">{stats?.totalActiveSubscriptions || 0}</div>
-              <div className="ct-stat-card__label">{t('admin.stats.activeSubscriptions')}</div>
+              <div className="ct-stat-card__label">Active Subscriptions</div>
             </CardBody>
           </Card>
           <Card className="ct-stat-card">
@@ -205,7 +203,7 @@ export function AdminPage() {
               <div className="ct-stat-card__value">
                 ${stats?.monthlyRecurringRevenue.toFixed(2) || '0.00'}
               </div>
-              <div className="ct-stat-card__label">{t('admin.stats.totalRevenue')}</div>
+              <div className="ct-stat-card__label">Total Revenue</div>
             </CardBody>
           </Card>
           <Card className="ct-stat-card">
@@ -214,14 +212,14 @@ export function AdminPage() {
               <div className="ct-stat-card__value">
                 ${stats?.totalMeteredRevenue.toFixed(2) || '0.00'}
               </div>
-              <div className="ct-stat-card__label">{t('admin.stats.totalOverage')}</div>
+              <div className="ct-stat-card__label">Total Overage</div>
             </CardBody>
           </Card>
           <Card className="ct-stat-card">
             <CardBody>
               <div className="ct-stat-card__icon">⚡</div>
               <div className="ct-stat-card__value">{stats?.usageEventsToday || 0}</div>
-              <div className="ct-stat-card__label">{t('admin.stats.billingEvents')}</div>
+              <div className="ct-stat-card__label">Billing Events</div>
             </CardBody>
           </Card>
         </div>
@@ -232,19 +230,19 @@ export function AdminPage() {
             className={`ct-admin__tab ${activeTab === 'overview' ? 'ct-admin__tab--active' : ''}`}
             onClick={() => setActiveTab('overview')}
           >
-            {t('admin.tabs.overview')}
+            Overview
           </button>
           <button
             className={`ct-admin__tab ${activeTab === 'subscriptions' ? 'ct-admin__tab--active' : ''}`}
             onClick={() => setActiveTab('subscriptions')}
           >
-            {t('admin.tabs.subscriptions')}
+            Subscriptions
           </button>
           <button
             className={`ct-admin__tab ${activeTab === 'events' ? 'ct-admin__tab--active' : ''}`}
             onClick={() => setActiveTab('events')}
           >
-            {t('admin.tabs.billingEvents')}
+            Billing Events
           </button>
         </div>
 
@@ -253,7 +251,7 @@ export function AdminPage() {
           <div className="ct-admin__overview">
             <Card>
               <CardHeader>
-                <h2>{t('admin.tabs.subscriptions')}</h2>
+                <h2>Subscriptions</h2>
               </CardHeader>
               <CardBody>
                 <div className="ct-plan-distribution">
@@ -272,7 +270,7 @@ export function AdminPage() {
                     </div>
                   ))}
                   {(!stats?.subscriptionsByPlan || Object.keys(stats.subscriptionsByPlan).length === 0) && (
-                    <p className="ct-admin__empty">{t('usage.noHistory')}</p>
+                    <p className="ct-admin__empty">No usage history available</p>
                   )}
                 </div>
               </CardBody>
@@ -283,7 +281,7 @@ export function AdminPage() {
         {activeTab === 'subscriptions' && (
           <Card>
             <CardHeader>
-              <h2>{t('admin.tabs.subscriptions')}</h2>
+              <h2>Subscriptions</h2>
             </CardHeader>
             <CardBody>
               <Table
@@ -291,7 +289,7 @@ export function AdminPage() {
                 data={subscriptions?.data || []}
                 keyExtractor={(sub) => sub.id}
                 onRowClick={(sub) => navigate(`/dashboard/${sub.id}`)}
-                emptyMessage={t('usage.noHistory')}
+                emptyMessage="No usage history available"
               />
             </CardBody>
           </Card>
@@ -300,9 +298,9 @@ export function AdminPage() {
         {activeTab === 'events' && (
           <Card>
             <CardHeader>
-              <h2>{t('admin.tabs.billingEvents')}</h2>
+              <h2>Billing Events</h2>
               <p className="ct-admin__events-description">
-                {t('admin.payloadModal.description')}
+                This is the exact JSON payload that would be sent to the Azure Marketplace Metered Billing API.
               </p>
             </CardHeader>
             <CardBody>
@@ -311,7 +309,7 @@ export function AdminPage() {
                 data={usageEvents?.data || []}
                 keyExtractor={(event) => event.id}
                 onRowClick={(event) => setSelectedEvent(event)}
-                emptyMessage={t('usage.noHistory')}
+                emptyMessage="No usage history available"
               />
             </CardBody>
           </Card>
@@ -321,12 +319,12 @@ export function AdminPage() {
         <Modal
           isOpen={!!selectedEvent}
           onClose={() => setSelectedEvent(null)}
-          title={t('admin.payloadModal.title')}
+          title="Azure Metered Billing API Payload"
           size="medium"
         >
           {selectedEvent && (
             <div className="ct-event-detail">
-              <h3>{t('admin.payloadModal.title')}</h3>
+              <h3>Azure Metered Billing API Payload</h3>
               <pre className="ct-event-detail__json">
 {JSON.stringify({
   resourceId: selectedEvent.resourceId,
@@ -338,17 +336,17 @@ export function AdminPage() {
               </pre>
               <div className="ct-event-detail__info">
                 <div className="ct-event-detail__row">
-                  <span>{t('common.status')}:</span>
+                  <span>Status:</span>
                   <span className={`ct-status-badge ct-status-badge--${selectedEvent.status.toLowerCase()}`}>
                     {selectedEvent.status}
                   </span>
                 </div>
                 <div className="ct-event-detail__row">
-                  <span>{t('common.amount')}:</span>
+                  <span>Amount:</span>
                   <span>${selectedEvent.amount.toFixed(2)}</span>
                 </div>
                 <div className="ct-event-detail__row">
-                  <span>{t('common.date')}:</span>
+                  <span>Date:</span>
                   <span>{formatDateTime(selectedEvent.createdAt)}</span>
                 </div>
               </div>
