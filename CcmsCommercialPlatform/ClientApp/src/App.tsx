@@ -10,6 +10,7 @@ import {
   SupportPage,
   AzureLandingPage,
   AzureWebhooksPage,
+  EntraIdGuidePage,
 } from './pages';
 import './styles/styles.css';
 
@@ -28,6 +29,7 @@ function App() {
         {/* Azure Development Pages (for Technical Configuration in Marketplace offers) */}
         <Route path="/azure-landing" element={<AzureLandingPage />} />
         <Route path="/azure-webhooks" element={<AzureWebhooksPage />} />
+        <Route path="/entra-id-guide" element={<EntraIdGuidePage />} />
       </Routes>
     </BrowserRouter>
   );

@@ -701,6 +701,63 @@ a:hover {
   display: block;
 }
 
+.ct-input-hint {
+  color: var(--ct-gray-500);
+  font-size: var(--ct-font-size-sm);
+  margin-top: var(--ct-space-xs);
+  display: block;
+}
+
+/* Entra ID Configuration Section */
+.ct-entra-section {
+  background-color: var(--ct-info-light);
+  border: 1px solid var(--ct-info);
+  border-radius: var(--ct-radius-md);
+  padding: var(--ct-space-lg);
+  margin: var(--ct-space-lg) 0;
+}
+
+.ct-entra-section__header {
+  margin-bottom: var(--ct-space-lg);
+}
+
+.ct-entra-section__header h3 {
+  color: var(--ct-primary-dark);
+  font-size: var(--ct-font-size-xl);
+  font-weight: 600;
+  margin-bottom: var(--ct-space-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--ct-space-sm);
+}
+
+.ct-entra-section__header h3::before {
+  content: "🔐";
+}
+
+.ct-entra-section__description {
+  color: var(--ct-gray-600);
+  font-size: var(--ct-font-size-sm);
+  line-height: 1.6;
+}
+
+.ct-entra-section__description a {
+  color: var(--ct-primary);
+  text-decoration: underline;
+}
+
+.ct-entra-section__description a:hover {
+  color: var(--ct-primary-dark);
+}
+
+.ct-entra-section .ct-input-group {
+  margin-bottom: var(--ct-space-md);
+}
+
+.ct-entra-section .ct-form-row {
+  margin-bottom: 0;
+}
+
 /* ==========================================================================
    Spinner Component
    ========================================================================== */
@@ -3167,4 +3224,537 @@ a:hover {
 
 [dir="rtl"] .ct-thank-you__feature {
   flex-direction: row-reverse;
+}
+
+/* ==========================================================================
+   Entra ID Guide Link (in Azure Landing Page form)
+   ========================================================================== */
+
+.ct-entra-section__guide-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ct-space-sm);
+  margin-top: var(--ct-space-md);
+  padding: var(--ct-space-sm) var(--ct-space-md);
+  background-color: var(--ct-white);
+  border: 1px solid var(--ct-primary);
+  border-radius: var(--ct-radius-md);
+  color: var(--ct-primary);
+  font-size: var(--ct-font-size-sm);
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.ct-entra-section__guide-link:hover {
+  background-color: var(--ct-primary);
+  color: var(--ct-white);
+  text-decoration: none;
+}
+
+/* ==========================================================================
+   Entra ID Guide Page Styles
+   ========================================================================== */
+
+.ct-entra-guide {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--ct-space-xl) var(--ct-space-lg);
+}
+
+.ct-entra-guide__header {
+  text-align: center;
+  margin-bottom: var(--ct-space-2xl);
+  padding-bottom: var(--ct-space-xl);
+  border-bottom: 2px solid var(--ct-gray-300);
+}
+
+.ct-entra-guide__back-link {
+  display: inline-block;
+  margin-bottom: var(--ct-space-lg);
+  color: var(--ct-primary);
+  font-size: var(--ct-font-size-sm);
+  text-decoration: none;
+}
+
+.ct-entra-guide__back-link:hover {
+  text-decoration: underline;
+}
+
+.ct-entra-guide__header h1 {
+  font-size: var(--ct-font-size-3xl);
+  color: var(--ct-primary-dark);
+  margin-bottom: var(--ct-space-md);
+}
+
+.ct-entra-guide__subtitle {
+  font-size: var(--ct-font-size-lg);
+  color: var(--ct-gray-600);
+}
+
+.ct-entra-guide__content {
+  background: var(--ct-white);
+  border-radius: var(--ct-radius-lg);
+  box-shadow: var(--ct-shadow-md);
+  padding: var(--ct-space-xl);
+}
+
+.ct-entra-guide__section {
+  margin-bottom: var(--ct-space-2xl);
+  padding-bottom: var(--ct-space-xl);
+  border-bottom: 1px solid var(--ct-gray-300);
+}
+
+.ct-entra-guide__section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.ct-entra-guide__section h2 {
+  font-size: var(--ct-font-size-xl);
+  color: var(--ct-gray-900);
+  margin-bottom: var(--ct-space-md);
+}
+
+.ct-entra-guide__section p {
+  color: var(--ct-gray-700);
+  margin-bottom: var(--ct-space-md);
+  line-height: 1.7;
+}
+
+.ct-entra-guide__step-header {
+  display: flex;
+  align-items: center;
+  gap: var(--ct-space-md);
+  margin-bottom: var(--ct-space-lg);
+}
+
+.ct-entra-guide__step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: var(--ct-primary);
+  color: var(--ct-white);
+  font-size: var(--ct-font-size-xl);
+  font-weight: 700;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ct-entra-guide__step-header h2 {
+  margin-bottom: 0;
+}
+
+.ct-entra-guide__steps {
+  list-style-type: decimal;
+  padding-left: var(--ct-space-xl);
+  color: var(--ct-gray-700);
+}
+
+.ct-entra-guide__steps li {
+  margin-bottom: var(--ct-space-md);
+  line-height: 1.7;
+}
+
+.ct-entra-guide__steps ul {
+  margin-top: var(--ct-space-sm);
+  margin-bottom: var(--ct-space-sm);
+  padding-left: var(--ct-space-lg);
+  list-style-type: disc;
+}
+
+.ct-entra-guide__steps code {
+  background-color: var(--ct-gray-200);
+  padding: 2px 6px;
+  border-radius: var(--ct-radius-sm);
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: var(--ct-font-size-sm);
+}
+
+.ct-entra-guide__link {
+  color: var(--ct-primary);
+  text-decoration: underline;
+}
+
+.ct-entra-guide__link:hover {
+  color: var(--ct-primary-dark);
+}
+
+.ct-entra-guide__code-block {
+  background-color: var(--ct-gray-900);
+  color: var(--ct-white);
+  padding: var(--ct-space-md);
+  border-radius: var(--ct-radius-md);
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: var(--ct-font-size-sm);
+  margin: var(--ct-space-sm) 0;
+}
+
+.ct-entra-guide__option-highlight {
+  background-color: var(--ct-primary-light);
+  border-left: 4px solid var(--ct-primary);
+  padding: var(--ct-space-md);
+  border-radius: 0 var(--ct-radius-md) var(--ct-radius-md) 0;
+  margin: var(--ct-space-sm) 0;
+  font-weight: 500;
+  color: var(--ct-primary-dark);
+}
+
+.ct-entra-guide__info-box {
+  display: flex;
+  gap: var(--ct-space-md);
+  background-color: var(--ct-info-light);
+  border: 1px solid var(--ct-info);
+  border-radius: var(--ct-radius-md);
+  padding: var(--ct-space-lg);
+  margin: var(--ct-space-lg) 0;
+}
+
+.ct-entra-guide__info-icon {
+  font-size: var(--ct-font-size-xl);
+  flex-shrink: 0;
+}
+
+.ct-entra-guide__info-box ul {
+  margin: var(--ct-space-sm) 0 0;
+  padding-left: var(--ct-space-lg);
+}
+
+.ct-entra-guide__info-box li {
+  margin-bottom: var(--ct-space-xs);
+}
+
+.ct-entra-guide__warning-box {
+  display: flex;
+  gap: var(--ct-space-md);
+  background-color: var(--ct-warning-light);
+  border: 1px solid var(--ct-warning);
+  border-radius: var(--ct-radius-md);
+  padding: var(--ct-space-lg);
+  margin: var(--ct-space-lg) 0;
+}
+
+.ct-entra-guide__warning-icon {
+  font-size: var(--ct-font-size-xl);
+  flex-shrink: 0;
+}
+
+.ct-entra-guide__tip {
+  background-color: var(--ct-success-light);
+  border-left: 4px solid var(--ct-success);
+  padding: var(--ct-space-md);
+  border-radius: 0 var(--ct-radius-md) var(--ct-radius-md) 0;
+  margin: var(--ct-space-md) 0;
+  font-size: var(--ct-font-size-sm);
+  color: var(--ct-gray-700);
+}
+
+.ct-entra-guide__values-table {
+  border: 1px solid var(--ct-gray-300);
+  border-radius: var(--ct-radius-md);
+  overflow: hidden;
+  margin: var(--ct-space-lg) 0;
+}
+
+.ct-entra-guide__value-row {
+  display: flex;
+  flex-direction: column;
+  padding: var(--ct-space-lg);
+  border-bottom: 1px solid var(--ct-gray-300);
+}
+
+.ct-entra-guide__value-row:last-child {
+  border-bottom: none;
+}
+
+.ct-entra-guide__value-row--highlight {
+  background-color: var(--ct-warning-light);
+}
+
+.ct-entra-guide__value-label {
+  display: flex;
+  align-items: center;
+  gap: var(--ct-space-sm);
+  margin-bottom: var(--ct-space-sm);
+}
+
+.ct-entra-guide__required-badge {
+  background-color: var(--ct-accent);
+  color: var(--ct-white);
+  font-size: var(--ct-font-size-xs);
+  padding: 2px 8px;
+  border-radius: var(--ct-radius-sm);
+  text-transform: uppercase;
+}
+
+.ct-entra-guide__value-desc {
+  color: var(--ct-gray-600);
+  font-size: var(--ct-font-size-sm);
+  line-height: 1.6;
+}
+
+.ct-entra-guide__example {
+  display: block;
+  margin-top: var(--ct-space-xs);
+  font-family: 'Consolas', 'Monaco', monospace;
+  color: var(--ct-gray-500);
+}
+
+.ct-entra-guide__note {
+  color: var(--ct-accent);
+  font-weight: 500;
+}
+
+.ct-entra-guide__section--summary {
+  background-color: var(--ct-primary-light);
+  margin: var(--ct-space-xl) calc(-1 * var(--ct-space-xl));
+  padding: var(--ct-space-xl);
+  border-radius: 0;
+  border-bottom: none;
+}
+
+.ct-entra-guide__summary-table {
+  background: var(--ct-white);
+  border-radius: var(--ct-radius-md);
+  overflow: hidden;
+  margin: var(--ct-space-lg) 0;
+}
+
+.ct-entra-guide__summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--ct-space-md) var(--ct-space-lg);
+  border-bottom: 1px solid var(--ct-gray-300);
+}
+
+.ct-entra-guide__summary-row:last-child {
+  border-bottom: none;
+}
+
+.ct-entra-guide__summary-field {
+  font-weight: 600;
+  color: var(--ct-gray-900);
+}
+
+.ct-entra-guide__summary-location {
+  color: var(--ct-gray-500);
+  font-size: var(--ct-font-size-sm);
+}
+
+.ct-entra-guide__cta {
+  text-align: center;
+  margin-top: var(--ct-space-xl);
+}
+
+.ct-entra-guide__cta-button {
+  display: inline-block;
+  padding: var(--ct-space-md) var(--ct-space-xl);
+  background-color: var(--ct-primary);
+  color: var(--ct-white);
+  border-radius: var(--ct-radius-md);
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.ct-entra-guide__cta-button:hover {
+  background-color: var(--ct-primary-dark);
+  color: var(--ct-white);
+}
+
+.ct-entra-guide__faq {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ct-space-lg);
+}
+
+.ct-entra-guide__faq-item h3 {
+  font-size: var(--ct-font-size-md);
+  color: var(--ct-gray-900);
+  margin-bottom: var(--ct-space-sm);
+}
+
+.ct-entra-guide__faq-item p {
+  color: var(--ct-gray-600);
+  margin-bottom: 0;
+}
+
+.ct-entra-guide__contact {
+  background-color: var(--ct-gray-200);
+  margin: var(--ct-space-xl) calc(-1 * var(--ct-space-xl)) calc(-1 * var(--ct-space-xl));
+  padding: var(--ct-space-xl);
+  border-radius: 0 0 var(--ct-radius-lg) var(--ct-radius-lg);
+  text-align: center;
+}
+
+.ct-entra-guide__contact h2 {
+  margin-bottom: var(--ct-space-sm);
+}
+
+.ct-entra-guide__contact p {
+  margin-bottom: var(--ct-space-md);
+}
+
+.ct-entra-guide__contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ct-space-sm);
+}
+
+.ct-entra-guide__contact-info a {
+  color: var(--ct-primary);
+  text-decoration: underline;
+}
+
+/* Permissions Table */
+.ct-entra-guide__permissions-table {
+  margin: var(--ct-space-lg) 0;
+  overflow-x: auto;
+}
+
+.ct-entra-guide__permissions-table table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--ct-gray-300);
+  border-radius: var(--ct-radius-md);
+  overflow: hidden;
+}
+
+.ct-entra-guide__permissions-table th,
+.ct-entra-guide__permissions-table td {
+  padding: var(--ct-space-md);
+  text-align: left;
+  border-bottom: 1px solid var(--ct-gray-300);
+}
+
+.ct-entra-guide__permissions-table th {
+  background-color: var(--ct-primary);
+  color: var(--ct-white);
+  font-weight: 600;
+}
+
+.ct-entra-guide__permissions-table td {
+  background-color: var(--ct-white);
+}
+
+.ct-entra-guide__permissions-table tr:last-child td {
+  border-bottom: none;
+}
+
+.ct-entra-guide__permissions-table code {
+  background-color: var(--ct-gray-200);
+  padding: 2px 6px;
+  border-radius: var(--ct-radius-sm);
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: var(--ct-font-size-sm);
+}
+
+/* Scope Configuration */
+.ct-entra-guide__scope-config {
+  background-color: var(--ct-gray-100);
+  border: 1px solid var(--ct-gray-300);
+  border-radius: var(--ct-radius-md);
+  padding: var(--ct-space-lg);
+  margin: var(--ct-space-md) 0;
+}
+
+.ct-entra-guide__config-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ct-space-md);
+  padding: var(--ct-space-sm) 0;
+  border-bottom: 1px solid var(--ct-gray-300);
+}
+
+.ct-entra-guide__config-item:last-child {
+  border-bottom: none;
+}
+
+.ct-entra-guide__config-label {
+  font-weight: 600;
+  color: var(--ct-gray-700);
+  min-width: 200px;
+  flex-shrink: 0;
+}
+
+.ct-entra-guide__config-item code {
+  background-color: var(--ct-primary-light);
+  color: var(--ct-primary-dark);
+  padding: 2px 8px;
+  border-radius: var(--ct-radius-sm);
+  font-family: 'Consolas', 'Monaco', monospace;
+}
+
+/* Image Container */
+.ct-entra-guide__image-container {
+  margin: var(--ct-space-lg) 0;
+  text-align: center;
+}
+
+.ct-entra-guide__image {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--ct-gray-300);
+  border-radius: var(--ct-radius-md);
+  box-shadow: var(--ct-shadow-md);
+}
+
+.ct-entra-guide__image-caption {
+  margin-top: var(--ct-space-sm);
+  font-size: var(--ct-font-size-sm);
+  color: var(--ct-gray-500);
+  font-style: italic;
+}
+
+/* Subsection Title */
+.ct-entra-guide__subsection-title {
+  font-size: var(--ct-font-size-lg);
+  color: var(--ct-primary-dark);
+  margin: var(--ct-space-xl) 0 var(--ct-space-md);
+  padding-bottom: var(--ct-space-sm);
+  border-bottom: 2px solid var(--ct-primary-light);
+}
+
+.ct-entra-guide__subsection-title:first-of-type {
+  margin-top: var(--ct-space-lg);
+}
+
+/* Responsive styles for Entra Guide */
+@media (max-width: 768px) {
+  .ct-entra-guide {
+    padding: var(--ct-space-md);
+  }
+
+  .ct-entra-guide__header h1 {
+    font-size: var(--ct-font-size-2xl);
+  }
+
+  .ct-entra-guide__content {
+    padding: var(--ct-space-lg);
+  }
+
+  .ct-entra-guide__section--summary {
+    margin: var(--ct-space-xl) calc(-1 * var(--ct-space-lg));
+    padding: var(--ct-space-lg);
+  }
+
+  .ct-entra-guide__summary-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--ct-space-xs);
+  }
+
+  .ct-entra-guide__contact {
+    margin: var(--ct-space-xl) calc(-1 * var(--ct-space-lg)) calc(-1 * var(--ct-space-lg));
+    padding: var(--ct-space-lg);
+  }
+
+  .ct-entra-guide__info-box,
+  .ct-entra-guide__warning-box {
+    flex-direction: column;
+  }
 }

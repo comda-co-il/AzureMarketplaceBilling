@@ -29,4 +29,23 @@ public class SubmitCustomerInfoRequest
     public string? CountryOther { get; set; }
     
     public string Comments { get; set; } = string.Empty;
+    
+    // Entra ID (Azure AD) Configuration
+    /// <summary>
+    /// Application (client) ID from Azure AD App Registration
+    /// </summary>
+    [Required]
+    public string EntraClientId { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Client secret from Azure AD App Registration
+    /// </summary>
+    [Required]
+    public string EntraClientSecret { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Directory (tenant) ID from Azure AD
+    /// </summary>
+    [Required]
+    public string EntraTenantId { get; set; } = string.Empty;
 }

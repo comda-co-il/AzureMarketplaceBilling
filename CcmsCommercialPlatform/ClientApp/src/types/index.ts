@@ -199,6 +199,10 @@ export interface SubmitCustomerInfoRequest {
   countryCode?: string;
   countryOther?: string;
   comments?: string;
+  // Entra ID (Azure AD) Configuration
+  entraClientId: string;
+  entraClientSecret: string;
+  entraTenantId: string;
 }
 
 export interface FeatureSelectionItem {

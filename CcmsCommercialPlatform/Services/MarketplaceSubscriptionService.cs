@@ -13,19 +13,22 @@ public class MarketplaceSubscriptionService : IMarketplaceSubscriptionService
     private readonly ILogger<MarketplaceSubscriptionService> _logger;
     private readonly IConfiguration _configuration;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IEmailService _emailService;
     
     public MarketplaceSubscriptionService(
         AppDbContext context,
         IAzureMarketplaceClient marketplaceClient,
         ILogger<MarketplaceSubscriptionService> logger,
         IConfiguration configuration,
-        IHttpClientFactory httpClientFactory)
+        IHttpClientFactory httpClientFactory,
+        IEmailService emailService)
     {
         _context = context;
         _marketplaceClient = marketplaceClient;
         _logger = logger;
         _configuration = configuration;
         _httpClientFactory = httpClientFactory;
+        _emailService = emailService;
     }
     
     public async Task<ResolvedSubscriptionInfo> ResolveTokenAndCreateAsync(string token)
@@ -117,6 +120,12 @@ public class MarketplaceSubscriptionService : IMarketplaceSubscriptionService
         subscription.CountryCode = request.CountryCode;
         subscription.CountryOther = request.CountryOther;
         subscription.Comments = request.Comments;
+        
+        // Update Entra ID (Azure AD) configuration
+        subscription.EntraClientId = request.EntraClientId;
+        subscription.EntraClientSecret = request.EntraClientSecret;
+        subscription.EntraTenantId = request.EntraTenantId;
+        
         subscription.CustomerInfoSubmittedAt = DateTime.UtcNow;
         subscription.Status = MarketplaceSubscriptionStatus.PendingFeatureSelection;
         subscription.UpdatedAt = DateTime.UtcNow;
@@ -270,6 +279,34 @@ public class MarketplaceSubscriptionService : IMarketplaceSubscriptionService
         subscription.UpdatedAt = DateTime.UtcNow;
         
         await _context.SaveChangesAsync();
+        
+        // Send welcome email to the customer
+        try
+        {
+            var emailSent = await _emailService.SendWelcomeEmailAsync(subscription);
+            if (emailSent)
+            {
+                _logger.LogInformation(
+                    "Welcome email sent to {CustomerEmail} for MarketplaceSubscription Id={Id}",
+                    subscription.CustomerEmail,
+                    subscription.Id);
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "Failed to send welcome email to {CustomerEmail} for MarketplaceSubscription Id={Id}",
+                    subscription.CustomerEmail,
+                    subscription.Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Log but don't fail the subscription finalization
+            _logger.LogError(ex,
+                "Error sending welcome email to {CustomerEmail} for MarketplaceSubscription Id={Id}",
+                subscription.CustomerEmail,
+                subscription.Id);
+        }
         
         return MapToResponse(subscription);
     }

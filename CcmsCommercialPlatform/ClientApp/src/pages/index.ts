@@ -9,3 +9,4 @@ export { SupportPage } from './SupportPage';
 // Azure Development Pages (to be removed after integration)
 export { AzureLandingPage } from './AzureLandingPage';
 export { AzureWebhooksPage } from './AzureWebhooksPage';
+export { EntraIdGuidePage } from './EntraIdGuidePage';

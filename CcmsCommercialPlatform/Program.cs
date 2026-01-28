@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using CcmsCommercialPlatform.Api.Data;
 using CcmsCommercialPlatform.Api.Services;
+using CcmsCommercialPlatform.Api.Models.Email;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -54,6 +55,10 @@ else
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 builder.Services.AddScoped<IMeteredBillingService, MeteredBillingService>();
 builder.Services.AddScoped<IMarketplaceSubscriptionService, MarketplaceSubscriptionService>();
+
+// Configure Email Service
+builder.Services.Configure<MailSenderOptions>(builder.Configuration.GetSection("Mail"));
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 // Add HttpClient for external API calls
 builder.Services.AddHttpClient();

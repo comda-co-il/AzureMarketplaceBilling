@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { Card, CardHeader, CardBody, Button, CountryAutocomplete } from '../components/Common';
 import { marketplaceApi } from '../services/api';
@@ -26,6 +26,7 @@ export function AzureLandingPage() {
   const [currentStep, setCurrentStep] = useState<Step>('resolving');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFinalized, setIsFinalized] = useState(false); // Prevent multiple finalizations
 
   // Data state
   const [resolvedInfo, setResolvedInfo] = useState<ResolvedSubscriptionInfo | null>(null);
@@ -43,6 +44,20 @@ export function AzureLandingPage() {
   const [countryError, setCountryError] = useState<string>('');
   const [countryOtherError, setCountryOtherError] = useState<string>('');
   const [comments, setComments] = useState('');
+
+  // Form validation errors
+  const [formErrors, setFormErrors] = useState<{
+    customerName?: string;
+    customerEmail?: string;
+    companyName?: string;
+    phoneNumber?: string;
+  }>({});
+
+  // Entra ID (Azure AD) Configuration
+  const [entraClientId, setEntraClientId] = useState('');
+  const [entraClientSecret, setEntraClientSecret] = useState('');
+  const [entraTenantId, setEntraTenantId] = useState('');
+  const [entraErrors, setEntraErrors] = useState<{ clientId?: string; clientSecret?: string; tenantId?: string }>({});
 
   // Step 1: Resolve token on mount
   useEffect(() => {
@@ -96,9 +111,49 @@ export function AzureLandingPage() {
       setCountryCode('XX');
     }
 
-    // Validate country
+    // Validate all form fields
     let isValid = true;
+    const newFormErrors: typeof formErrors = {};
     setCountryError('');
+
+    // Validate customer name
+    if (!customerName.trim()) {
+      newFormErrors.customerName = 'Full name is required';
+      isValid = false;
+    } else if (customerName.trim().length < 2) {
+      newFormErrors.customerName = 'Full name must be at least 2 characters';
+      isValid = false;
+    }
+
+    // Validate email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!customerEmail.trim()) {
+      newFormErrors.customerEmail = 'Email address is required';
+      isValid = false;
+    } else if (!emailRegex.test(customerEmail.trim())) {
+      newFormErrors.customerEmail = 'Please enter a valid email address';
+      isValid = false;
+    }
+
+    // Validate company name
+    if (!companyName.trim()) {
+      newFormErrors.companyName = 'Company name is required';
+      isValid = false;
+    } else if (companyName.trim().length < 2) {
+      newFormErrors.companyName = 'Company name must be at least 2 characters';
+      isValid = false;
+    }
+
+    // Validate phone number (optional, but if provided must be valid format)
+    if (phoneNumber.trim()) {
+      const phoneRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/;
+      if (!phoneRegex.test(phoneNumber.trim())) {
+        newFormErrors.phoneNumber = 'Please enter a valid phone number';
+        isValid = false;
+      }
+    }
+
+    setFormErrors(newFormErrors);
 
     // If "Other" is selected, validate that countryOther is filled
     if (finalCountryCode === 'XX' && !countryOther.trim()) {
@@ -107,6 +162,32 @@ export function AzureLandingPage() {
     } else {
       setCountryOtherError('');
     }
+
+    // Validate Entra ID fields
+    const newEntraErrors: { clientId?: string; clientSecret?: string; tenantId?: string } = {};
+    
+    if (!entraClientId.trim()) {
+      newEntraErrors.clientId = 'Application (Client) ID is required';
+      isValid = false;
+    } else if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(entraClientId.trim())) {
+      newEntraErrors.clientId = 'Please enter a valid GUID format (e.g., 12345678-1234-1234-1234-123456789abc)';
+      isValid = false;
+    }
+    
+    if (!entraClientSecret.trim()) {
+      newEntraErrors.clientSecret = 'Client Secret is required';
+      isValid = false;
+    }
+    
+    if (!entraTenantId.trim()) {
+      newEntraErrors.tenantId = 'Directory (Tenant) ID is required';
+      isValid = false;
+    } else if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(entraTenantId.trim())) {
+      newEntraErrors.tenantId = 'Please enter a valid GUID format (e.g., 12345678-1234-1234-1234-123456789abc)';
+      isValid = false;
+    }
+    
+    setEntraErrors(newEntraErrors);
 
     if (!isValid) {
       return;
@@ -126,6 +207,9 @@ export function AzureLandingPage() {
         countryCode: finalCountryCode,
         countryOther: finalCountryCode === 'XX' ? countryOther : undefined,
         comments,
+        entraClientId: entraClientId.trim(),
+        entraClientSecret: entraClientSecret.trim(),
+        entraTenantId: entraTenantId.trim(),
       });
 
       setSubscription(result);
@@ -192,7 +276,11 @@ export function AzureLandingPage() {
 
   // Step 4: Finalize subscription
   const handleFinalize = async () => {
-    if (!resolvedInfo) return;
+    // Prevent multiple submissions
+    if (!resolvedInfo || isFinalized || isLoading) return;
+
+    // Set flag immediately to prevent double-clicks
+    setIsFinalized(true);
 
     try {
       setIsLoading(true);
@@ -211,6 +299,8 @@ export function AzureLandingPage() {
     } catch (err) {
       console.error('Failed to finalize subscription:', err);
       setError('Failed to finalize subscription. Please try again.');
+      // Reset the flag on error so user can retry
+      setIsFinalized(false);
     } finally {
       setIsLoading(false);
     }
@@ -309,12 +399,15 @@ export function AzureLandingPage() {
               </label>
               <input
                 type="text"
-                className="ct-input--primary"
+                className={`ct-input--primary ${formErrors.customerName ? 'ct-input--error' : ''}`}
                 value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                required
+                onChange={(e) => {
+                  setCustomerName(e.target.value);
+                  setFormErrors((prev) => ({ ...prev, customerName: undefined }));
+                }}
                 placeholder="John Smith"
               />
+              {formErrors.customerName && <div className="ct-input-error">{formErrors.customerName}</div>}
             </div>
             <div className="ct-input-group">
               <label className="ct-label--primary">
@@ -322,12 +415,15 @@ export function AzureLandingPage() {
               </label>
               <input
                 type="email"
-                className="ct-input--primary"
+                className={`ct-input--primary ${formErrors.customerEmail ? 'ct-input--error' : ''}`}
                 value={customerEmail}
-                onChange={(e) => setCustomerEmail(e.target.value)}
-                required
+                onChange={(e) => {
+                  setCustomerEmail(e.target.value);
+                  setFormErrors((prev) => ({ ...prev, customerEmail: undefined }));
+                }}
                 placeholder="john@company.com"
               />
+              {formErrors.customerEmail && <div className="ct-input-error">{formErrors.customerEmail}</div>}
             </div>
           </div>
 
@@ -338,22 +434,29 @@ export function AzureLandingPage() {
               </label>
               <input
                 type="text"
-                className="ct-input--primary"
+                className={`ct-input--primary ${formErrors.companyName ? 'ct-input--error' : ''}`}
                 value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-                required
+                onChange={(e) => {
+                  setCompanyName(e.target.value);
+                  setFormErrors((prev) => ({ ...prev, companyName: undefined }));
+                }}
                 placeholder="Acme Corporation"
               />
+              {formErrors.companyName && <div className="ct-input-error">{formErrors.companyName}</div>}
             </div>
             <div className="ct-input-group">
               <label className="ct-label--primary">Phone Number</label>
               <input
                 type="tel"
-                className="ct-input--primary"
+                className={`ct-input--primary ${formErrors.phoneNumber ? 'ct-input--error' : ''}`}
                 value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
+                onChange={(e) => {
+                  setPhoneNumber(e.target.value);
+                  setFormErrors((prev) => ({ ...prev, phoneNumber: undefined }));
+                }}
                 placeholder="+1 (555) 123-4567"
               />
+              {formErrors.phoneNumber && <div className="ct-input-error">{formErrors.phoneNumber}</div>}
             </div>
           </div>
 
@@ -387,6 +490,80 @@ export function AzureLandingPage() {
             </div>
           </div>
 
+          {/* Entra ID (Azure AD) Configuration Section */}
+          <div className="ct-entra-section">
+            <div className="ct-entra-section__header">
+              <h3>Microsoft Entra ID Configuration</h3>
+              <p className="ct-entra-section__description">
+                To integrate with your organization, we need your Microsoft Entra ID (formerly Azure AD) app registration details.
+                You can find these in the{' '}
+                <a href="https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade" target="_blank" rel="noopener noreferrer">
+                  Azure Portal → App Registrations
+                </a>.
+              </p>
+              <Link to="/entra-id-guide" className="ct-entra-section__guide-link" target="_blank">
+                📖 How to configure Entra ID? (Step-by-step guide)
+              </Link>
+            </div>
+
+            <div className="ct-form-row">
+              <div className="ct-input-group">
+                <label className="ct-label--primary">
+                  Application (Client) ID <span className="ct-required">*</span>
+                </label>
+                <input
+                  type="text"
+                  className={`ct-input--primary ${entraErrors.clientId ? 'ct-input--error' : ''}`}
+                  value={entraClientId}
+                  onChange={(e) => {
+                    setEntraClientId(e.target.value);
+                    setEntraErrors((prev) => ({ ...prev, clientId: undefined }));
+                  }}
+                  placeholder="12345678-1234-1234-1234-123456789abc"
+                />
+                <span className="ct-input-hint">Found on the app's Overview page as "Application (client) ID"</span>
+                {entraErrors.clientId && <div className="ct-input-error">{entraErrors.clientId}</div>}
+              </div>
+              <div className="ct-input-group">
+                <label className="ct-label--primary">
+                  Directory (Tenant) ID <span className="ct-required">*</span>
+                </label>
+                <input
+                  type="text"
+                  className={`ct-input--primary ${entraErrors.tenantId ? 'ct-input--error' : ''}`}
+                  value={entraTenantId}
+                  onChange={(e) => {
+                    setEntraTenantId(e.target.value);
+                    setEntraErrors((prev) => ({ ...prev, tenantId: undefined }));
+                  }}
+                  placeholder="87654321-4321-4321-4321-cba987654321"
+                />
+                <span className="ct-input-hint">Found on the app's Overview page as "Directory (tenant) ID"</span>
+                {entraErrors.tenantId && <div className="ct-input-error">{entraErrors.tenantId}</div>}
+              </div>
+            </div>
+
+            <div className="ct-input-group">
+              <label className="ct-label--primary">
+                Client Secret <span className="ct-required">*</span>
+              </label>
+              <input
+                type="password"
+                className={`ct-input--primary ${entraErrors.clientSecret ? 'ct-input--error' : ''}`}
+                value={entraClientSecret}
+                onChange={(e) => {
+                  setEntraClientSecret(e.target.value);
+                  setEntraErrors((prev) => ({ ...prev, clientSecret: undefined }));
+                }}
+                placeholder="Enter your client secret value"
+              />
+              <span className="ct-input-hint">
+                Found in "Certificates & secrets" → "Client secrets". Use the secret <strong>Value</strong>, not the Secret ID.
+              </span>
+              {entraErrors.clientSecret && <div className="ct-input-error">{entraErrors.clientSecret}</div>}
+            </div>
+          </div>
+
           <div className="ct-input-group">
             <label className="ct-label--primary">Additional Comments</label>
             <textarea
@@ -412,8 +589,13 @@ export function AzureLandingPage() {
                 setCountryCode('IL'); // Israel
                 setCountryOther('');
                 setComments('Demo submission');
+                setEntraClientId('12345678-1234-1234-1234-123456789abc');
+                setEntraClientSecret('your-client-secret-value');
+                setEntraTenantId('87654321-4321-4321-4321-cba987654321');
                 setCountryError('');
                 setCountryOtherError('');
+                setEntraErrors({});
+                setFormErrors({});
               }}
             >
               Fill All Fields
@@ -529,9 +711,9 @@ export function AzureLandingPage() {
             variant="primary"
             size="large"
             onClick={handleFinalize}
-            disabled={isLoading}
+            disabled={isLoading || isFinalized}
           >
-            {isLoading ? 'Processing...' : 'Finish Setup'}
+            {isLoading ? 'Processing...' : isFinalized ? 'Completed' : 'Finish Setup'}
           </Button>
         </div>
       </CardBody>

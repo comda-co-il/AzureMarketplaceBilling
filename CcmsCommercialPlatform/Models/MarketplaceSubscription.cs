@@ -69,6 +69,22 @@ public class MarketplaceSubscription
     
     public string Comments { get; set; } = string.Empty;
     
+    // Entra ID (Azure AD) Configuration - Customer's organization settings
+    /// <summary>
+    /// Application (client) ID from customer's Azure AD App Registration
+    /// </summary>
+    public string EntraClientId { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Client secret from customer's Azure AD App Registration
+    /// </summary>
+    public string EntraClientSecret { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Directory (tenant) ID from customer's Azure AD
+    /// </summary>
+    public string EntraTenantId { get; set; } = string.Empty;
+    
     // Status tracking
     public MarketplaceSubscriptionStatus Status { get; set; } = MarketplaceSubscriptionStatus.PendingCustomerInfo;
     
