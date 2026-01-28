@@ -146,9 +146,11 @@ export function AzureLandingPage() {
 
     // Validate phone number (optional, but if provided must be valid format)
     if (phoneNumber.trim()) {
-      const phoneRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/;
+      // More permissive regex that accepts common international phone formats
+      // Allows: +, digits, spaces, dashes, dots, parentheses anywhere
+      const phoneRegex = /^[+]?[\d\s\-().]{7,20}$/;
       if (!phoneRegex.test(phoneNumber.trim())) {
-        newFormErrors.phoneNumber = 'Please enter a valid phone number';
+        newFormErrors.phoneNumber = 'Please enter a valid phone number (7-20 characters)';
         isValid = false;
       }
     }
