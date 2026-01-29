@@ -758,6 +758,27 @@ a:hover {
   margin-bottom: 0;
 }
 
+.ct-entra-section__security-note {
+  display: flex;
+  gap: var(--ct-space-md);
+  background: var(--ct-info-light);
+  border: 1px solid var(--ct-info);
+  border-radius: var(--ct-radius-md);
+  padding: var(--ct-space-md);
+  margin-bottom: var(--ct-space-lg);
+  font-size: var(--ct-font-size-sm);
+  line-height: 1.5;
+}
+
+.ct-entra-section__security-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.ct-entra-section__security-note strong {
+  color: var(--ct-gray-900);
+}
+
 /* ==========================================================================
    Spinner Component
    ========================================================================== */
@@ -2601,6 +2622,14 @@ a:hover {
   margin-top: var(--ct-space-xl);
 }
 
+.ct-azure-landing__content .ct-card {
+  min-height: 200px;
+}
+
+.ct-azure-landing__content .ct-card__body {
+  min-height: 150px;
+}
+
 .ct-azure-landing__error {
   display: flex;
   align-items: center;
@@ -2717,6 +2746,127 @@ a:hover {
 .ct-resolving p {
   color: var(--ct-gray-600);
   margin-top: var(--ct-space-sm);
+}
+
+/* Sign-In Step (SSO) */
+.ct-sign-in {
+  text-align: center;
+  padding: var(--ct-space-2xl);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.ct-sign-in__icon {
+  font-size: 4rem;
+  margin-bottom: var(--ct-space-lg);
+}
+
+.ct-sign-in h2 {
+  color: var(--ct-gray-900);
+  margin-bottom: var(--ct-space-md);
+}
+
+.ct-sign-in__message {
+  color: var(--ct-gray-600);
+  line-height: 1.6;
+  margin-bottom: var(--ct-space-xl);
+}
+
+.ct-sign-in__error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ct-space-sm);
+  background: var(--ct-error-light);
+  color: var(--ct-error);
+  padding: var(--ct-space-md);
+  border-radius: var(--ct-radius-md);
+  margin-bottom: var(--ct-space-lg);
+}
+
+.ct-sign-in__warning {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ct-space-sm);
+  background: var(--ct-warning-light);
+  color: var(--ct-gray-900);
+  padding: var(--ct-space-md);
+  border-radius: var(--ct-radius-md);
+  margin-bottom: var(--ct-space-lg);
+  text-align: left;
+}
+
+.ct-sign-in__warning p {
+  margin: 0;
+}
+
+.ct-sign-in__actions {
+  margin-bottom: var(--ct-space-xl);
+}
+
+.ct-sign-in__actions .ct-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ct-space-sm);
+}
+
+.ct-sign-in__ms-icon {
+  display: flex;
+  align-items: center;
+}
+
+.ct-sign-in__ms-icon svg {
+  display: block;
+}
+
+.ct-sign-in__note {
+  font-size: var(--ct-font-size-sm);
+  color: var(--ct-gray-500);
+}
+
+.ct-sign-in__note a {
+  color: var(--ct-primary);
+}
+
+/* SSO Info Banner */
+.ct-sso-info {
+  background: var(--ct-success-light);
+  border: 1px solid var(--ct-success);
+  border-radius: var(--ct-radius-md);
+  padding: var(--ct-space-md) var(--ct-space-lg);
+  margin-bottom: var(--ct-space-lg);
+}
+
+.ct-sso-info__header {
+  display: flex;
+  align-items: center;
+  gap: var(--ct-space-sm);
+  font-size: var(--ct-font-size-md);
+  color: var(--ct-gray-900);
+}
+
+.ct-sso-info__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: var(--ct-success);
+  color: var(--ct-white);
+  border-radius: 50%;
+  font-size: var(--ct-font-size-sm);
+}
+
+.ct-sso-info__note {
+  margin-top: var(--ct-space-sm);
+  font-size: var(--ct-font-size-sm);
+  color: var(--ct-gray-600);
+}
+
+/* Resolved Info - Additional Styles */
+.ct-resolved-info__value--mono {
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: var(--ct-font-size-sm);
 }
 
 /* Resolved Info Banner */

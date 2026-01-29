@@ -3,6 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { Card, CardHeader, CardBody, Button, CountryAutocomplete } from '../components/Common';
 import { marketplaceApi } from '../services/api';
+import { useEntraAuth } from '../auth';
 import type {
   ResolvedSubscriptionInfo,
   MarketplaceSubscriptionResponse,
@@ -10,7 +11,7 @@ import type {
   FeatureSelectionItem,
 } from '../types';
 
-type Step = 'resolving' | 'customer-info' | 'feature-selection' | 'thank-you';
+type Step = 'sign-in' | 'resolving' | 'customer-info' | 'feature-selection' | 'thank-you';
 
 interface FeatureState extends AvailableFeature {
   isEnabled: boolean;
@@ -22,11 +23,22 @@ export function AzureLandingPage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
 
-  // State
-  const [currentStep, setCurrentStep] = useState<Step>('resolving');
+  // Microsoft Entra ID SSO authentication
+  // Required by Azure Marketplace: https://learn.microsoft.com/en-us/partner-center/marketplace-offers/azure-ad-transactable-saas-landing-page
+  const { 
+    isAuthenticated, 
+    isLoading: isAuthLoading, 
+    userInfo, 
+    error: authError, 
+    login,
+  } = useEntraAuth();
+
+  // State - starts at sign-in if not authenticated
+  const [currentStep, setCurrentStep] = useState<Step>('sign-in');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isFinalized, setIsFinalized] = useState(false); // Prevent multiple finalizations
+  const [hasPrefilledFromSSO, setHasPrefilledFromSSO] = useState(false);
 
   // Data state
   const [resolvedInfo, setResolvedInfo] = useState<ResolvedSubscriptionInfo | null>(null);
@@ -53,14 +65,27 @@ export function AzureLandingPage() {
     phoneNumber?: string;
   }>({});
 
-  // Entra ID (Azure AD) Configuration
+  // Entra ID (Azure AD) Configuration - Customer's app registration for SaaS integration
   const [entraClientId, setEntraClientId] = useState('');
   const [entraClientSecret, setEntraClientSecret] = useState('');
   const [entraTenantId, setEntraTenantId] = useState('');
   const [entraErrors, setEntraErrors] = useState<{ clientId?: string; clientSecret?: string; tenantId?: string }>({});
 
-  // Step 1: Resolve token on mount
+  // Step 0: Handle authentication state
+  // When user is authenticated, move to resolving step
   useEffect(() => {
+    if (isAuthenticated && currentStep === 'sign-in') {
+      setCurrentStep('resolving');
+    }
+  }, [isAuthenticated, currentStep]);
+
+  // Step 1: Resolve token when authenticated
+  useEffect(() => {
+    // Only resolve token when authenticated and on resolving step
+    if (!isAuthenticated || currentStep !== 'resolving') {
+      return;
+    }
+
     if (!token) {
       setError('No token provided. Please access this page from Azure Marketplace.');
       return;
@@ -71,11 +96,6 @@ export function AzureLandingPage() {
         setIsLoading(true);
         const result = await marketplaceApi.resolveToken({ token });
         setResolvedInfo(result);
-
-        // Pre-fill email from purchaser
-        if (result.purchaser?.emailId) {
-          setCustomerEmail(result.purchaser.emailId);
-        }
 
         // Load available features
         const features = await marketplaceApi.getAvailableFeatures();
@@ -97,7 +117,61 @@ export function AzureLandingPage() {
     };
 
     resolveToken();
-  }, [token]);
+  }, [isAuthenticated, currentStep, token]);
+
+  // Pre-fill form with SSO user information from Microsoft Entra ID and Graph API
+  useEffect(() => {
+    if (userInfo && !hasPrefilledFromSSO && currentStep === 'customer-info') {
+      // Pre-fill from SSO (Graph API takes precedence over ID token claims)
+      if (userInfo.displayName || userInfo.name) {
+        setCustomerName(userInfo.displayName || userInfo.name);
+      } else if (userInfo.givenName && userInfo.surname) {
+        setCustomerName(`${userInfo.givenName} ${userInfo.surname}`);
+      }
+      
+      if (userInfo.email) {
+        setCustomerEmail(userInfo.email);
+      }
+      
+      if (userInfo.companyName) {
+        setCompanyName(userInfo.companyName);
+      }
+      
+      if (userInfo.mobilePhone) {
+        setPhoneNumber(userInfo.mobilePhone);
+      }
+      
+      if (userInfo.jobTitle) {
+        setJobTitle(userInfo.jobTitle);
+      }
+
+      // Try to set country from Graph API
+      if (userInfo.country) {
+        // Map common country names to ISO codes (basic mapping)
+        const countryMap: Record<string, string> = {
+          'United States': 'US',
+          'USA': 'US',
+          'Israel': 'IL',
+          'United Kingdom': 'GB',
+          'UK': 'GB',
+          'Germany': 'DE',
+          'France': 'FR',
+          'Canada': 'CA',
+          'Australia': 'AU',
+          // Add more as needed
+        };
+        const mappedCode = countryMap[userInfo.country];
+        if (mappedCode) {
+          setCountryCode(mappedCode);
+        } else {
+          setCountryCode('XX'); // Other
+          setCountryOther(userInfo.country);
+        }
+      }
+
+      setHasPrefilledFromSSO(true);
+    }
+  }, [userInfo, hasPrefilledFromSSO, currentStep]);
 
   // Step 2: Submit customer info
   const handleSubmitCustomerInfo = async (e: React.FormEvent) => {
@@ -165,7 +239,7 @@ export function AzureLandingPage() {
       setCountryOtherError('');
     }
 
-    // Validate Entra ID fields
+    // Validate Entra ID fields (customer's app registration for SaaS integration)
     const newEntraErrors: { clientId?: string; clientSecret?: string; tenantId?: string } = {};
     
     if (!entraClientId.trim()) {
@@ -179,12 +253,17 @@ export function AzureLandingPage() {
     if (!entraClientSecret.trim()) {
       newEntraErrors.clientSecret = 'Client Secret is required';
       isValid = false;
+    } else if (entraClientSecret.trim().length < 10) {
+      newEntraErrors.clientSecret = 'Client Secret appears too short. Please verify you copied the full value.';
+      isValid = false;
     }
     
-    if (!entraTenantId.trim()) {
+    // Use entered tenant ID or fall back to SSO tenant ID
+    const finalTenantId = entraTenantId.trim() || userInfo?.tenantId || '';
+    if (!finalTenantId) {
       newEntraErrors.tenantId = 'Directory (Tenant) ID is required';
       isValid = false;
-    } else if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(entraTenantId.trim())) {
+    } else if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(finalTenantId)) {
       newEntraErrors.tenantId = 'Please enter a valid GUID format (e.g., 12345678-1234-1234-1234-123456789abc)';
       isValid = false;
     }
@@ -209,9 +288,10 @@ export function AzureLandingPage() {
         countryCode: finalCountryCode,
         countryOther: finalCountryCode === 'XX' ? countryOther : undefined,
         comments,
+        // Customer's Entra ID app registration for SaaS integration
         entraClientId: entraClientId.trim(),
         entraClientSecret: entraClientSecret.trim(),
-        entraTenantId: entraTenantId.trim(),
+        entraTenantId: finalTenantId,
       });
 
       setSubscription(result);
@@ -318,14 +398,16 @@ export function AzureLandingPage() {
   // Get step number for display
   const getStepNumber = () => {
     switch (currentStep) {
-      case 'resolving':
+      case 'sign-in':
         return 1;
-      case 'customer-info':
+      case 'resolving':
         return 2;
-      case 'feature-selection':
+      case 'customer-info':
         return 3;
-      case 'thank-you':
+      case 'feature-selection':
         return 4;
+      case 'thank-you':
+        return 5;
       default:
         return 1;
     }
@@ -334,10 +416,11 @@ export function AzureLandingPage() {
   // Render step indicator
   const renderStepIndicator = () => {
     const steps = [
-      { num: 1, label: 'Verification' },
-      { num: 2, label: 'Your Details' },
-      { num: 3, label: 'Choose Tokens' },
-      { num: 4, label: 'Complete' },
+      { num: 1, label: 'Sign In' },
+      { num: 2, label: 'Verification' },
+      { num: 3, label: 'Your Details' },
+      { num: 4, label: 'Choose Tokens' },
+      { num: 5, label: 'Complete' },
     ];
 
     const currentNum = getStepNumber();
@@ -360,6 +443,69 @@ export function AzureLandingPage() {
     );
   };
 
+  // Render sign-in step (SSO required by Azure Marketplace)
+  const renderSignInStep = () => (
+    <Card>
+      <CardBody>
+        <div className="ct-sign-in">
+          <div className="ct-sign-in__icon">🔐</div>
+          <h2>Sign in to Continue</h2>
+          <p className="ct-sign-in__message">
+            To complete your Azure Marketplace subscription setup, please sign in with your 
+            Microsoft account. This verifies your identity and allows us to securely configure 
+            your subscription.
+          </p>
+          
+          {authError && (
+            <div className="ct-sign-in__error">
+              <span>⚠️</span> {authError}
+            </div>
+          )}
+
+          {!token && (
+            <div className="ct-sign-in__warning">
+              <span>⚠️</span>
+              <p>No marketplace token detected. Please access this page from Azure Marketplace.</p>
+            </div>
+          )}
+
+          <div className="ct-sign-in__actions">
+            <Button 
+              variant="primary" 
+              size="large" 
+              onClick={login}
+              disabled={isAuthLoading || !token}
+            >
+              {isAuthLoading ? (
+                <>
+                  <span className="ct-spinner ct-spinner--small"></span>
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  <span className="ct-sign-in__ms-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 21 21">
+                      <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+                      <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+                      <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+                      <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+                    </svg>
+                  </span>
+                  Sign in with Microsoft
+                </>
+              )}
+            </Button>
+          </div>
+
+          <p className="ct-sign-in__note">
+            By signing in, you agree to our{' '}
+            <Link to="/privacy-policy" target="_blank">Privacy Policy</Link>.
+          </p>
+        </div>
+      </CardBody>
+    </Card>
+  );
+
   // Render resolving step
   const renderResolvingStep = () => (
     <Card>
@@ -380,6 +526,19 @@ export function AzureLandingPage() {
         <h2>Tell us about yourself</h2>
       </CardHeader>
       <CardBody>
+        {/* SSO User Info Banner */}
+        {userInfo && (
+          <div className="ct-sso-info">
+            <div className="ct-sso-info__header">
+              <span className="ct-sso-info__icon">✓</span>
+              <span>Signed in as <strong>{userInfo.email || userInfo.preferredUsername}</strong></span>
+            </div>
+            <p className="ct-sso-info__note">
+              Your information has been pre-filled from your Microsoft account. Please review and update if needed.
+            </p>
+          </div>
+        )}
+
         {resolvedInfo && (
           <div className="ct-resolved-info">
             <div className="ct-resolved-info__item">
@@ -390,6 +549,12 @@ export function AzureLandingPage() {
               <span className="ct-resolved-info__label">Plan:</span>
               <span className="ct-resolved-info__value">{resolvedInfo.planId}</span>
             </div>
+            {userInfo?.tenantId && (
+              <div className="ct-resolved-info__item">
+                <span className="ct-resolved-info__label">Tenant ID:</span>
+                <span className="ct-resolved-info__value ct-resolved-info__value--mono">{userInfo.tenantId}</span>
+              </div>
+            )}
           </div>
         )}
 
@@ -492,20 +657,27 @@ export function AzureLandingPage() {
             </div>
           </div>
 
-          {/* Entra ID (Azure AD) Configuration Section */}
+          {/* Entra ID (Azure AD) Configuration Section - Required for SaaS Integration */}
           <div className="ct-entra-section">
             <div className="ct-entra-section__header">
               <h3>Microsoft Entra ID Configuration</h3>
               <p className="ct-entra-section__description">
-                To integrate with your organization, we need your Microsoft Entra ID (formerly Azure AD) app registration details.
-                You can find these in the{' '}
-                <a href="https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade" target="_blank" rel="noopener noreferrer">
-                  Azure Portal → App Registrations
-                </a>.
+                To integrate ComsignTrust CMS with your organization, we need your Microsoft Entra ID 
+                (formerly Azure AD) app registration details. This allows us to securely communicate 
+                with your tenant.
               </p>
               <Link to="/entra-id-guide" className="ct-entra-section__guide-link" target="_blank">
                 📖 How to configure Entra ID? (Step-by-step guide)
               </Link>
+            </div>
+
+            <div className="ct-entra-section__security-note">
+              <span className="ct-entra-section__security-icon">🔒</span>
+              <div>
+                <strong>Security Note:</strong> Your credentials are transmitted securely over HTTPS 
+                and encrypted at rest. We recommend using a dedicated app registration with minimal 
+                required permissions for this integration.
+              </div>
             </div>
 
             <div className="ct-form-row">
@@ -533,14 +705,19 @@ export function AzureLandingPage() {
                 <input
                   type="text"
                   className={`ct-input--primary ${entraErrors.tenantId ? 'ct-input--error' : ''}`}
-                  value={entraTenantId}
+                  value={entraTenantId || userInfo?.tenantId || ''}
                   onChange={(e) => {
                     setEntraTenantId(e.target.value);
                     setEntraErrors((prev) => ({ ...prev, tenantId: undefined }));
                   }}
                   placeholder="87654321-4321-4321-4321-cba987654321"
                 />
-                <span className="ct-input-hint">Found on the app's Overview page as "Directory (tenant) ID"</span>
+                <span className="ct-input-hint">
+                  {userInfo?.tenantId 
+                    ? 'Pre-filled from your sign-in. Change only if using a different tenant.'
+                    : 'Found on the app\'s Overview page as "Directory (tenant) ID"'
+                  }
+                </span>
                 {entraErrors.tenantId && <div className="ct-input-error">{entraErrors.tenantId}</div>}
               </div>
             </div>
@@ -558,6 +735,7 @@ export function AzureLandingPage() {
                   setEntraErrors((prev) => ({ ...prev, clientSecret: undefined }));
                 }}
                 placeholder="Enter your client secret value"
+                autoComplete="off"
               />
               <span className="ct-input-hint">
                 Found in "Certificates & secrets" → "Client secrets". Use the secret <strong>Value</strong>, not the Secret ID.
@@ -583,24 +761,26 @@ export function AzureLandingPage() {
               variant="outline" 
               size="large" 
               onClick={() => {
+                // Fill with demo/test data
                 setCustomerName('Gal Cohen');
                 setCustomerEmail('galc@comda.co.il');
                 setCompanyName('Comda');
-                setPhoneNumber('+972 (50) 123-4567');
+                setPhoneNumber('+972-50-123-4567');
                 setJobTitle('Software Developer');
                 setCountryCode('IL'); // Israel
                 setCountryOther('');
-                setComments('Demo submission');
+                setComments('Demo submission for testing');
                 setEntraClientId('12345678-1234-1234-1234-123456789abc');
-                setEntraClientSecret('your-client-secret-value');
+                setEntraClientSecret('demo-client-secret-value-12345');
                 setEntraTenantId('87654321-4321-4321-4321-cba987654321');
+                // Clear any errors
                 setCountryError('');
                 setCountryOtherError('');
                 setEntraErrors({});
                 setFormErrors({});
               }}
             >
-              Fill All Fields
+              Fill Test Data
             </Button>
             <Button type="submit" variant="primary" size="large" disabled={isLoading}>
               {isLoading ? 'Saving...' : 'Continue to Token Selection'}
@@ -798,6 +978,8 @@ export function AzureLandingPage() {
   // Render current step
   const renderCurrentStep = () => {
     switch (currentStep) {
+      case 'sign-in':
+        return renderSignInStep();
       case 'resolving':
         return renderResolvingStep();
       case 'customer-info':
@@ -807,7 +989,7 @@ export function AzureLandingPage() {
       case 'thank-you':
         return renderThankYouStep();
       default:
-        return null;
+        return renderSignInStep();
     }
   };
 
