@@ -2670,17 +2670,21 @@ a:hover {
   background: var(--ct-white);
   border-radius: var(--ct-radius-lg);
   box-shadow: var(--ct-shadow-sm);
+  overflow-x: auto;
+  max-width: 100%;
 }
 
 .ct-wizard-step {
   display: flex;
   align-items: center;
   position: relative;
+  flex-shrink: 0;
 }
 
 .ct-wizard-step__number {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
   border-radius: 50%;
   background: var(--ct-gray-300);
   color: var(--ct-gray-600);
@@ -2688,29 +2692,30 @@ a:hover {
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  font-size: var(--ct-font-size-md);
+  font-size: var(--ct-font-size-sm);
   transition: all 0.3s ease;
 }
 
 .ct-wizard-step__label {
-  margin-left: var(--ct-space-sm);
-  font-size: var(--ct-font-size-sm);
+  margin-left: var(--ct-space-xs);
+  font-size: var(--ct-font-size-xs);
   color: var(--ct-gray-500);
   font-weight: 500;
   white-space: nowrap;
 }
 
 .ct-wizard-step__line {
-  width: 60px;
+  width: 40px;
+  min-width: 30px;
   height: 2px;
   background: var(--ct-gray-300);
-  margin: 0 var(--ct-space-md);
+  margin: 0 var(--ct-space-sm);
 }
 
 .ct-wizard-step--active .ct-wizard-step__number {
   background: var(--ct-primary);
   color: var(--ct-white);
-  box-shadow: 0 0 0 4px rgba(0, 110, 149, 0.2);
+  box-shadow: 0 0 0 3px rgba(0, 110, 149, 0.2);
 }
 
 .ct-wizard-step--active .ct-wizard-step__label {

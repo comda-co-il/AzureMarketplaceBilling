@@ -108,9 +108,21 @@ export function AzureLandingPage() {
         );
 
         setCurrentStep('customer-info');
-      } catch (err) {
+      } catch (err: unknown) {
         console.error('Failed to resolve token:', err);
-        setError('Failed to resolve marketplace token. Please try again or contact support.');
+        // Extract actual error message from API response
+        let errorMessage = 'Failed to resolve marketplace token.';
+        if (err && typeof err === 'object') {
+          const axiosError = err as { response?: { data?: { error?: string; message?: string } }; message?: string };
+          if (axiosError.response?.data?.error) {
+            errorMessage = axiosError.response.data.error;
+          } else if (axiosError.response?.data?.message) {
+            errorMessage = axiosError.response.data.message;
+          } else if (axiosError.message) {
+            errorMessage = axiosError.message;
+          }
+        }
+        setError(errorMessage);
       } finally {
         setIsLoading(false);
       }
@@ -324,14 +336,16 @@ export function AzureLandingPage() {
     );
   };
 
-  // Step 3: Submit feature selection
-  const handleSubmitFeatures = async () => {
-    if (!resolvedInfo) return;
+  // Step 3: Finalize subscription
+  const handleFinalize = async () => {
+    // Prevent multiple submissions
+    if (!resolvedInfo || isFinalized || isLoading) return;
 
     try {
       setIsLoading(true);
       setError(null);
 
+      // First submit features if any are selected
       const features: FeatureSelectionItem[] = availableFeatures
         .filter((f) => f.isEnabled)
         .map((f) => ({
@@ -342,34 +356,12 @@ export function AzureLandingPage() {
           pricePerUnit: f.pricePerUnit,
         }));
 
-      const result = await marketplaceApi.submitFeatureSelection({
-        marketplaceSubscriptionId: resolvedInfo.marketplaceSubscriptionId,
-        features,
-      });
-
-      setSubscription(result);
-    } catch (err) {
-      console.error('Failed to submit feature selection:', err);
-      setError('Failed to submit feature selection. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Step 4: Finalize subscription
-  const handleFinalize = async () => {
-    // Prevent multiple submissions
-    if (!resolvedInfo || isFinalized || isLoading) return;
-
-    // Set flag immediately to prevent double-clicks
-    setIsFinalized(true);
-
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      // First submit features if any are selected
-      await handleSubmitFeatures();
+      if (features.length > 0) {
+        await marketplaceApi.submitFeatureSelection({
+          marketplaceSubscriptionId: resolvedInfo.marketplaceSubscriptionId,
+          features,
+        });
+      }
 
       // Then finalize
       const result = await marketplaceApi.finalizeSubscription({
@@ -377,12 +369,23 @@ export function AzureLandingPage() {
       });
 
       setSubscription(result);
+      setIsFinalized(true);
       setCurrentStep('thank-you');
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Failed to finalize subscription:', err);
-      setError('Failed to finalize subscription. Please try again.');
-      // Reset the flag on error so user can retry
-      setIsFinalized(false);
+      // Extract actual error message
+      let errorMessage = 'Failed to finalize subscription. Please try again.';
+      if (err && typeof err === 'object') {
+        const axiosError = err as { response?: { data?: { error?: string; message?: string } }; message?: string };
+        if (axiosError.response?.data?.error) {
+          errorMessage = axiosError.response.data.error;
+        } else if (axiosError.response?.data?.message) {
+          errorMessage = axiosError.response.data.message;
+        } else if (axiosError.message) {
+          errorMessage = axiosError.message;
+        }
+      }
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -893,9 +896,9 @@ export function AzureLandingPage() {
             variant="primary"
             size="large"
             onClick={handleFinalize}
-            disabled={isLoading || isFinalized}
+            disabled={isLoading}
           >
-            {isLoading ? 'Processing...' : isFinalized ? 'Completed' : 'Finish Setup'}
+            {isLoading ? 'Processing...' : 'Finish Setup'}
           </Button>
         </div>
       </CardBody>

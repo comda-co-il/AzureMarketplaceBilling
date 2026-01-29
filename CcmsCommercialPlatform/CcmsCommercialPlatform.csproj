@@ -5,9 +5,15 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>db2f0f2c-1f15-435b-970d-608a206b04a2</UserSecretsId>
+    <!-- SPA settings for development -->
+    <SpaRoot>ClientApp\</SpaRoot>
+    <SpaProxyServerUrl>http://localhost:5173</SpaProxyServerUrl>
+    <SpaProxyLaunchCommand>npm run dev</SpaProxyLaunchCommand>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.Identity" Version="1.13.2" />
+    <PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="8.0.0" />
     <PackageReference Include="MailKit" Version="4.14.1" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
@@ -18,5 +24,22 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
   </ItemGroup>
+
+  <!-- Build frontend on project build -->
+  <Target Name="BuildClientApp" BeforeTargets="Build" Condition="Exists('$(SpaRoot)package.json')">
+    <Message Importance="high" Text="Building React frontend..." />
+    <Exec WorkingDirectory="$(SpaRoot)" Command="npm run build" />
+  </Target>
+
+  <!-- Copy frontend files to wwwroot on publish -->
+  <Target Name="PublishClientApp" AfterTargets="ComputeFilesToPublish">
+    <ItemGroup>
+      <DistFiles Include="$(SpaRoot)dist\**\*" />
+      <ResolvedFileToPublish Include="@(DistFiles)">
+        <RelativePath>wwwroot\%(RecursiveDir)%(FileName)%(Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
 
 </Project>

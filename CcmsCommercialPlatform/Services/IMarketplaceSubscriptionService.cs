@@ -31,9 +31,28 @@ public interface IMarketplaceSubscriptionService
     Task<MarketplaceSubscriptionResponse> SubmitFeatureSelectionAsync(SubmitFeatureSelectionRequest request);
     
     /// <summary>
-    /// Finalize subscription and submit to external system
+    /// Finalize subscription and initiate async provisioning via IaC Runner.
+    /// On success: saves deployment ID, sets status to Provisioning, sends preparation email.
+    /// On failure: sets status to ProvisioningFailed, does NOT send email.
     /// </summary>
     Task<MarketplaceSubscriptionResponse> FinalizeSubscriptionAsync(int marketplaceSubscriptionId);
+    
+    /// <summary>
+    /// Handle the webhook callback from IaC Runner when provisioning completes.
+    /// On success: saves CCMS URL and metadata, sets status to Active, sends invitation email.
+    /// On failure: sets status to ProvisioningFailed, does NOT send email.
+    /// </summary>
+    /// <param name="deploymentId">The deployment ID from the original provisioning request</param>
+    /// <param name="success">Whether provisioning completed successfully</param>
+    /// <param name="ccmsUrl">The CCMS access URL (only if success)</param>
+    /// <param name="rawPayload">Raw JSON payload for storing dynamic metadata</param>
+    /// <param name="errorMessage">Error message if provisioning failed</param>
+    Task<MarketplaceSubscriptionResponse> HandleProvisioningCallbackAsync(
+        string deploymentId, 
+        bool success, 
+        string? ccmsUrl, 
+        string? rawPayload,
+        string? errorMessage = null);
     
     /// <summary>
     /// Get all marketplace subscriptions (admin)

@@ -4,6 +4,7 @@ using System.Text.Json;
 using CcmsCommercialPlatform.Api.Data;
 using CcmsCommercialPlatform.Api.Models;
 using CcmsCommercialPlatform.Api.Models.Enums;
+using CcmsCommercialPlatform.Api.Services;
 
 namespace CcmsCommercialPlatform.Api.Controllers;
 
@@ -13,11 +14,16 @@ public class WebhookController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly ILogger<WebhookController> _logger;
+    private readonly IMarketplaceSubscriptionService _subscriptionService;
     
-    public WebhookController(AppDbContext context, ILogger<WebhookController> logger)
+    public WebhookController(
+        AppDbContext context, 
+        ILogger<WebhookController> logger,
+        IMarketplaceSubscriptionService subscriptionService)
     {
         _context = context;
         _logger = logger;
+        _subscriptionService = subscriptionService;
     }
     
     /// <summary>
@@ -244,6 +250,120 @@ public class WebhookController : ControllerBase
         await _context.SaveChangesAsync();
         
         return Ok(new { message = "Usage confirmation processed" });
+    }
+    
+    /// <summary>
+    /// Webhook callback endpoint for Claude IaC Runner (runner_ccms).
+    /// Called when CCMS infrastructure provisioning completes (success or failure).
+    /// 
+    /// IMPORTANT: The callback payload structure is NOT guaranteed to be stable.
+    /// We only assume:
+    /// - success (boolean): whether provisioning completed successfully
+    /// - One or more service URLs (e.g., ccms_url) when success=true
+    /// - Additional metadata fields may be added or removed over time
+    /// </summary>
+    [HttpPost("ccms-provisioning")]
+    public async Task<IActionResult> CcmsProvisioningCallback()
+    {
+        try
+        {
+            // Read the raw request body (payload structure is dynamic)
+            using var reader = new StreamReader(Request.Body);
+            var rawPayload = await reader.ReadToEndAsync();
+            
+            _logger.LogInformation("Received CCMS provisioning callback: {Payload}", rawPayload);
+            
+            // Parse the JSON to extract required fields
+            string? deploymentId = null;
+            bool success = false;
+            string? ccmsUrl = null;
+            string? errorMessage = null;
+            
+            try
+            {
+                using var doc = JsonDocument.Parse(rawPayload);
+                var root = doc.RootElement;
+                
+                // Extract deployment ID (could be "id", "deploymentId", "deployment_id")
+                deploymentId = GetJsonString(root, "id") 
+                    ?? GetJsonString(root, "deploymentId") 
+                    ?? GetJsonString(root, "deployment_id");
+                
+                // Extract success flag
+                if (root.TryGetProperty("success", out var successProp))
+                {
+                    success = successProp.ValueKind == JsonValueKind.True;
+                }
+                else if (root.TryGetProperty("Success", out var successProp2))
+                {
+                    success = successProp2.ValueKind == JsonValueKind.True;
+                }
+                
+                // Extract CCMS URL (could be various field names)
+                ccmsUrl = GetJsonString(root, "ccms_url") 
+                    ?? GetJsonString(root, "ccmsUrl")
+                    ?? GetJsonString(root, "CcmsUrl")
+                    ?? GetJsonString(root, "url")
+                    ?? GetJsonString(root, "service_url")
+                    ?? GetJsonString(root, "serviceUrl");
+                
+                // Extract error message if present
+                errorMessage = GetJsonString(root, "error")
+                    ?? GetJsonString(root, "errorMessage")
+                    ?? GetJsonString(root, "error_message")
+                    ?? GetJsonString(root, "message");
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogWarning(ex, "Failed to parse CCMS provisioning callback JSON payload");
+                return BadRequest(new { message = "Invalid JSON payload", error = ex.Message });
+            }
+            
+            // Validate required fields
+            if (string.IsNullOrEmpty(deploymentId))
+            {
+                _logger.LogWarning("CCMS provisioning callback missing deployment ID");
+                return BadRequest(new { message = "Missing deployment ID in callback payload" });
+            }
+            
+            // If success but no URL, log warning but continue
+            if (success && string.IsNullOrEmpty(ccmsUrl))
+            {
+                _logger.LogWarning(
+                    "CCMS provisioning callback success=true but no CCMS URL provided for deployment {DeploymentId}",
+                    deploymentId);
+            }
+            
+            // Process the callback through the service
+            var result = await _subscriptionService.HandleProvisioningCallbackAsync(
+                deploymentId,
+                success,
+                ccmsUrl,
+                rawPayload,
+                errorMessage);
+            
+            _logger.LogInformation(
+                "CCMS provisioning callback processed. SubscriptionId={SubscriptionId}, Status={Status}",
+                result.Id,
+                result.Status);
+            
+            return Ok(new 
+            { 
+                message = success ? "Provisioning completed successfully" : "Provisioning failed",
+                subscriptionId = result.Id,
+                status = result.StatusDisplay
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning(ex, "CCMS provisioning callback for unknown deployment");
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error processing CCMS provisioning callback");
+            return StatusCode(500, new { message = "Error processing callback", error = ex.Message });
+        }
     }
 }
 

@@ -21,22 +21,27 @@ public enum MarketplaceSubscriptionStatus
     PendingSubmission = 2,
     
     /// <summary>
-    /// Submitted to external system, waiting for activation
+    /// Provisioning request sent to IaC Runner, waiting for webhook callback
     /// </summary>
-    SubmittedToExternalSystem = 3,
+    Provisioning = 3,
     
     /// <summary>
-    /// Fully activated and ready to use
+    /// Provisioning failed (either initial request or webhook reported failure)
     /// </summary>
-    Active = 4,
+    ProvisioningFailed = 4,
+    
+    /// <summary>
+    /// Fully activated and ready to use (webhook confirmed success)
+    /// </summary>
+    Active = 5,
     
     /// <summary>
     /// Subscription was cancelled
     /// </summary>
-    Cancelled = 5,
+    Cancelled = 6,
     
     /// <summary>
     /// Error occurred during processing
     /// </summary>
-    Error = 6
+    Error = 7
 }

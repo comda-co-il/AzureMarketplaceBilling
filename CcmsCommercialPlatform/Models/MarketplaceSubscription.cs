@@ -85,6 +85,28 @@ public class MarketplaceSubscription
     /// </summary>
     public string EntraTenantId { get; set; } = string.Empty;
     
+    // IaC Runner / Provisioning fields
+    /// <summary>
+    /// Deployment ID returned from IaC Runner initial POST request
+    /// </summary>
+    public string? IaCDeploymentId { get; set; }
+    
+    /// <summary>
+    /// CCMS URL received from webhook callback when provisioning completes
+    /// </summary>
+    public string? CcmsUrl { get; set; }
+    
+    /// <summary>
+    /// Additional metadata from webhook callback (JSON format for dynamic fields)
+    /// The webhook payload structure is not guaranteed to be stable
+    /// </summary>
+    public string? ProvisioningMetadata { get; set; }
+    
+    /// <summary>
+    /// Error message if provisioning failed
+    /// </summary>
+    public string? ProvisioningErrorMessage { get; set; }
+    
     // Status tracking
     public MarketplaceSubscriptionStatus Status { get; set; } = MarketplaceSubscriptionStatus.PendingCustomerInfo;
     
@@ -92,7 +114,9 @@ public class MarketplaceSubscription
     public DateTime TokenResolvedAt { get; set; }
     public DateTime? CustomerInfoSubmittedAt { get; set; }
     public DateTime? FeatureSelectionCompletedAt { get; set; }
-    public DateTime? SubmittedToExternalSystemAt { get; set; }
+    public DateTime? SubmittedToExternalSystemAt { get; set; } // Kept for backward compatibility
+    public DateTime? ProvisioningRequestedAt { get; set; }
+    public DateTime? ProvisioningCompletedAt { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     

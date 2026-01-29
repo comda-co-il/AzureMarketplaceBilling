@@ -14,6 +14,7 @@ public class MarketplaceSubscriptionService : IMarketplaceSubscriptionService
     private readonly IConfiguration _configuration;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IEmailService _emailService;
+    private readonly IIaCRunnerService _iacRunnerService;
     
     public MarketplaceSubscriptionService(
         AppDbContext context,
@@ -21,7 +22,8 @@ public class MarketplaceSubscriptionService : IMarketplaceSubscriptionService
         ILogger<MarketplaceSubscriptionService> logger,
         IConfiguration configuration,
         IHttpClientFactory httpClientFactory,
-        IEmailService emailService)
+        IEmailService emailService,
+        IIaCRunnerService iacRunnerService)
     {
         _context = context;
         _marketplaceClient = marketplaceClient;
@@ -29,6 +31,7 @@ public class MarketplaceSubscriptionService : IMarketplaceSubscriptionService
         _configuration = configuration;
         _httpClientFactory = httpClientFactory;
         _emailService = emailService;
+        _iacRunnerService = iacRunnerService;
     }
     
     public async Task<ResolvedSubscriptionInfo> ResolveTokenAndCreateAsync(string token)
@@ -197,115 +200,158 @@ public class MarketplaceSubscriptionService : IMarketplaceSubscriptionService
             throw new ArgumentException($"Marketplace subscription '{marketplaceSubscriptionId}' not found");
         }
         
-        // Get the external webhook URL from configuration
-        var externalWebhookUrl = _configuration["ExternalSystem:WebhookUrl"];
-        var ourWebhookUrl = _configuration["ExternalSystem:OurWebhookUrl"] 
-            ?? $"{_configuration["ApplicationUrl"]}/api/webhook/external";
+        // Call Claude IaC Runner API to provision infrastructure (async provisioning)
+        _logger.LogInformation(
+            "Calling IaC Runner to provision infrastructure for MarketplaceSubscription Id={Id}",
+            subscription.Id);
         
-        if (!string.IsNullOrEmpty(externalWebhookUrl))
+        var iacRunnerResponse = await _iacRunnerService.ProvisionInfrastructureAsync(subscription);
+        
+        if (!iacRunnerResponse.Success)
         {
-            try
-            {
-                var client = _httpClientFactory.CreateClient();
-                
-                // Build the payload to send to external system
-                var payload = new
-                {
-                    subscriptionId = subscription.Id,
-                    azureSubscriptionId = subscription.AzureSubscriptionId,
-                    offerId = subscription.OfferId,
-                    planId = subscription.PlanId,
-                    customer = new
-                    {
-                        name = subscription.CustomerName,
-                        email = subscription.CustomerEmail,
-                        company = subscription.CompanyName,
-                        phone = subscription.PhoneNumber,
-                        jobTitle = subscription.JobTitle,
-                        countryCode = subscription.CountryCode,
-                        countryOther = subscription.CountryOther,
-                        comments = subscription.Comments
-                    },
-                    purchaser = new
-                    {
-                        email = subscription.PurchaserEmail,
-                        tenantId = subscription.PurchaserTenantId
-                    },
-                    features = subscription.FeatureSelections.Select(f => new
-                    {
-                        featureId = f.FeatureId,
-                        featureName = f.FeatureName,
-                        isEnabled = f.IsEnabled,
-                        quantity = f.Quantity,
-                        pricePerUnit = f.PricePerUnit
-                    }),
-                    webhookUrl = ourWebhookUrl,
-                    timestamp = DateTime.UtcNow
-                };
-                
-                var response = await client.PostAsJsonAsync(externalWebhookUrl, payload);
-                
-                if (response.IsSuccessStatusCode)
-                {
-                    _logger.LogInformation(
-                        "Successfully submitted to external system. MarketplaceSubscription Id={Id}",
-                        subscription.Id);
-                }
-                else
-                {
-                    _logger.LogWarning(
-                        "External system returned {StatusCode}. MarketplaceSubscription Id={Id}",
-                        response.StatusCode,
-                        subscription.Id);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex,
-                    "Failed to submit to external system. MarketplaceSubscription Id={Id}",
-                    subscription.Id);
-                // Continue anyway - we'll mark as submitted
-            }
-        }
-        else
-        {
-            _logger.LogInformation(
-                "No external webhook URL configured. Skipping external submission. MarketplaceSubscription Id={Id}",
-                subscription.Id);
+            // Provisioning request failed - do NOT send any email
+            _logger.LogError(
+                "IaC Runner provisioning request failed for MarketplaceSubscription Id={Id}. Message: {Message}",
+                subscription.Id,
+                iacRunnerResponse.Message);
+            
+            subscription.Status = MarketplaceSubscriptionStatus.ProvisioningFailed;
+            subscription.ProvisioningErrorMessage = iacRunnerResponse.Message;
+            subscription.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            
+            throw new InvalidOperationException(
+                $"Infrastructure provisioning request failed: {iacRunnerResponse.Message}");
         }
         
-        subscription.SubmittedToExternalSystemAt = DateTime.UtcNow;
-        subscription.Status = MarketplaceSubscriptionStatus.SubmittedToExternalSystem;
+        // Provisioning request succeeded - save the deployment ID and update status
+        _logger.LogInformation(
+            "IaC Runner provisioning request accepted for MarketplaceSubscription Id={Id}. Deployment Id: {DeploymentId}",
+            subscription.Id,
+            iacRunnerResponse.Id);
+        
+        subscription.IaCDeploymentId = iacRunnerResponse.Id;
+        subscription.Status = MarketplaceSubscriptionStatus.Provisioning;
+        subscription.ProvisioningRequestedAt = DateTime.UtcNow;
         subscription.UpdatedAt = DateTime.UtcNow;
         
         await _context.SaveChangesAsync();
         
-        // Send welcome email to the customer
+        // Send preparation email: "Your CCMS environment is being prepared"
         try
         {
-            var emailSent = await _emailService.SendWelcomeEmailAsync(subscription);
+            var emailSent = await _emailService.SendPreparationEmailAsync(subscription);
             if (emailSent)
             {
                 _logger.LogInformation(
-                    "Welcome email sent to {CustomerEmail} for MarketplaceSubscription Id={Id}",
+                    "Preparation email sent to {CustomerEmail} for MarketplaceSubscription Id={Id}",
                     subscription.CustomerEmail,
                     subscription.Id);
             }
             else
             {
                 _logger.LogWarning(
-                    "Failed to send welcome email to {CustomerEmail} for MarketplaceSubscription Id={Id}",
+                    "Failed to send preparation email to {CustomerEmail} for MarketplaceSubscription Id={Id}",
                     subscription.CustomerEmail,
                     subscription.Id);
             }
         }
         catch (Exception ex)
         {
-            // Log but don't fail the subscription finalization
+            // Log but don't fail - the provisioning request was successful
             _logger.LogError(ex,
-                "Error sending welcome email to {CustomerEmail} for MarketplaceSubscription Id={Id}",
+                "Error sending preparation email to {CustomerEmail} for MarketplaceSubscription Id={Id}",
                 subscription.CustomerEmail,
                 subscription.Id);
+        }
+        
+        return MapToResponse(subscription);
+    }
+    
+    public async Task<MarketplaceSubscriptionResponse> HandleProvisioningCallbackAsync(
+        string deploymentId, 
+        bool success, 
+        string? ccmsUrl, 
+        string? rawPayload,
+        string? errorMessage = null)
+    {
+        // Find subscription by deployment ID
+        var subscription = await _context.MarketplaceSubscriptions
+            .Include(s => s.FeatureSelections)
+            .FirstOrDefaultAsync(s => s.IaCDeploymentId == deploymentId);
+        
+        if (subscription == null)
+        {
+            _logger.LogWarning(
+                "Received provisioning callback for unknown deployment Id={DeploymentId}",
+                deploymentId);
+            throw new ArgumentException($"No subscription found for deployment '{deploymentId}'");
+        }
+        
+        _logger.LogInformation(
+            "Processing provisioning callback for MarketplaceSubscription Id={Id}, DeploymentId={DeploymentId}, Success={Success}",
+            subscription.Id,
+            deploymentId,
+            success);
+        
+        // Store the raw payload for dynamic metadata (webhook structure is not guaranteed)
+        subscription.ProvisioningMetadata = rawPayload;
+        subscription.ProvisioningCompletedAt = DateTime.UtcNow;
+        subscription.UpdatedAt = DateTime.UtcNow;
+        
+        if (success)
+        {
+            // Provisioning completed successfully
+            subscription.CcmsUrl = ccmsUrl;
+            subscription.Status = MarketplaceSubscriptionStatus.Active;
+            
+            await _context.SaveChangesAsync();
+            
+            _logger.LogInformation(
+                "Provisioning completed successfully for MarketplaceSubscription Id={Id}. CCMS URL: {CcmsUrl}",
+                subscription.Id,
+                ccmsUrl);
+            
+            // Send invitation email: "Your CCMS is ready - here's the URL"
+            try
+            {
+                var emailSent = await _emailService.SendInvitationEmailAsync(subscription);
+                if (emailSent)
+                {
+                    _logger.LogInformation(
+                        "Invitation email sent to {CustomerEmail} for MarketplaceSubscription Id={Id}",
+                        subscription.CustomerEmail,
+                        subscription.Id);
+                }
+                else
+                {
+                    _logger.LogWarning(
+                        "Failed to send invitation email to {CustomerEmail} for MarketplaceSubscription Id={Id}",
+                        subscription.CustomerEmail,
+                        subscription.Id);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log but don't fail - the provisioning completed
+                _logger.LogError(ex,
+                    "Error sending invitation email to {CustomerEmail} for MarketplaceSubscription Id={Id}",
+                    subscription.CustomerEmail,
+                    subscription.Id);
+            }
+        }
+        else
+        {
+            // Provisioning failed - do NOT send invitation email
+            subscription.Status = MarketplaceSubscriptionStatus.ProvisioningFailed;
+            subscription.ProvisioningErrorMessage = errorMessage ?? "Provisioning failed (no error message provided)";
+            
+            await _context.SaveChangesAsync();
+            
+            _logger.LogError(
+                "Provisioning failed for MarketplaceSubscription Id={Id}. Error: {Error}",
+                subscription.Id,
+                subscription.ProvisioningErrorMessage);
         }
         
         return MapToResponse(subscription);
@@ -369,7 +415,8 @@ public class MarketplaceSubscriptionService : IMarketplaceSubscriptionService
             MarketplaceSubscriptionStatus.PendingCustomerInfo => "Pending Customer Info",
             MarketplaceSubscriptionStatus.PendingFeatureSelection => "Pending Feature Selection",
             MarketplaceSubscriptionStatus.PendingSubmission => "Pending Submission",
-            MarketplaceSubscriptionStatus.SubmittedToExternalSystem => "Submitted",
+            MarketplaceSubscriptionStatus.Provisioning => "Provisioning",
+            MarketplaceSubscriptionStatus.ProvisioningFailed => "Provisioning Failed",
             MarketplaceSubscriptionStatus.Active => "Active",
             MarketplaceSubscriptionStatus.Cancelled => "Cancelled",
             MarketplaceSubscriptionStatus.Error => "Error",

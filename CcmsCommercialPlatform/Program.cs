@@ -54,6 +54,7 @@ else
 
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 builder.Services.AddScoped<IMeteredBillingService, MeteredBillingService>();
+builder.Services.AddScoped<IIaCRunnerService, IaCRunnerService>();
 builder.Services.AddScoped<IMarketplaceSubscriptionService, MarketplaceSubscriptionService>();
 
 // Configure Email Service
@@ -62,6 +63,20 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 
 // Add HttpClient for external API calls
 builder.Services.AddHttpClient();
+
+// Add named HttpClient for Azure Marketplace API
+builder.Services.AddHttpClient("AzureMarketplace", client =>
+{
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+// Add named HttpClient for Claude IaC Runner API
+builder.Services.AddHttpClient("IaCRunner", client =>
+{
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+    client.Timeout = TimeSpan.FromSeconds(60);
+});
 
 // Configure CORS for React frontend
 builder.Services.AddCors(options =>
@@ -90,14 +105,62 @@ app.UseSwaggerUI();
 app.UseHttpsRedirection();
 app.UseCors("AllowReactApp");
 
-// Serve static files from wwwroot
-app.UseDefaultFiles();
-app.UseStaticFiles();
+// Serve static files - in Development, serve from ClientApp/dist for hot reload
+// In Production, serve from wwwroot (files copied during publish)
+if (app.Environment.IsDevelopment())
+{
+    string clientAppDistPath = Path.Combine(app.Environment.ContentRootPath, "ClientApp", "dist");
+    if (Directory.Exists(clientAppDistPath))
+    {
+        app.UseDefaultFiles(new DefaultFilesOptions
+        {
+            FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(clientAppDistPath)
+        });
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(clientAppDistPath)
+        });
+    }
+    else
+    {
+        // Fallback to wwwroot if dist doesn't exist
+        app.UseDefaultFiles();
+        app.UseStaticFiles();
+    }
+}
+else
+{
+    app.UseDefaultFiles();
+    app.UseStaticFiles();
+}
 
 app.UseAuthorization();
 app.MapControllers();
 
 // Fallback to index.html for SPA routing
-app.MapFallbackToFile("index.html");
+if (app.Environment.IsDevelopment())
+{
+    string clientAppDistPath = Path.Combine(app.Environment.ContentRootPath, "ClientApp", "dist");
+    if (Directory.Exists(clientAppDistPath))
+    {
+        app.MapFallback(async context =>
+        {
+            string indexPath = Path.Combine(clientAppDistPath, "index.html");
+            if (File.Exists(indexPath))
+            {
+                context.Response.ContentType = "text/html";
+                await context.Response.SendFileAsync(indexPath);
+            }
+        });
+    }
+    else
+    {
+        app.MapFallbackToFile("index.html");
+    }
+}
+else
+{
+    app.MapFallbackToFile("index.html");
+}
 
 app.Run();

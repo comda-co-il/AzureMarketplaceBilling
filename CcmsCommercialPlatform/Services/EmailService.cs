@@ -18,18 +18,47 @@ public class EmailService : IEmailService
         _logger = logger;
     }
 
-    public async Task<bool> SendWelcomeEmailAsync(MarketplaceSubscription subscription)
+    public async Task<bool> SendPreparationEmailAsync(MarketplaceSubscription subscription)
     {
         if (string.IsNullOrEmpty(subscription.CustomerEmail))
         {
-            _logger.LogWarning("Cannot send welcome email - no customer email for subscription {Id}", subscription.Id);
+            _logger.LogWarning("Cannot send preparation email - no customer email for subscription {Id}", subscription.Id);
             return false;
         }
 
         var messageContent = new MailMessageContent
         {
-            Subject = "Welcome to ComsignTrust CMS - Your Subscription is Active!",
-            Body = GenerateWelcomeEmailBody(subscription)
+            Subject = "Your ComsignTrust CCMS Environment is Being Prepared",
+            Body = GeneratePreparationEmailBody(subscription)
+        };
+
+        var mailInfo = new MailInfo
+        {
+            To = [subscription.CustomerEmail],
+            MessageContent = messageContent
+        };
+
+        return await SendEmailAsync(mailInfo);
+    }
+
+    public async Task<bool> SendInvitationEmailAsync(MarketplaceSubscription subscription)
+    {
+        if (string.IsNullOrEmpty(subscription.CustomerEmail))
+        {
+            _logger.LogWarning("Cannot send invitation email - no customer email for subscription {Id}", subscription.Id);
+            return false;
+        }
+
+        if (string.IsNullOrEmpty(subscription.CcmsUrl))
+        {
+            _logger.LogWarning("Cannot send invitation email - no CCMS URL for subscription {Id}", subscription.Id);
+            return false;
+        }
+
+        var messageContent = new MailMessageContent
+        {
+            Subject = "Your ComsignTrust CCMS is Ready - Start Using It Now!",
+            Body = GenerateInvitationEmailBody(subscription)
         };
 
         var mailInfo = new MailInfo
@@ -115,7 +144,87 @@ public class EmailService : IEmailService
         }
     }
 
-    private static string GenerateWelcomeEmailBody(MarketplaceSubscription subscription)
+    private static string GeneratePreparationEmailBody(MarketplaceSubscription subscription)
+    {
+        var customerName = !string.IsNullOrEmpty(subscription.CustomerName) 
+            ? subscription.CustomerName 
+            : "Valued Customer";
+        
+        var companyName = !string.IsNullOrEmpty(subscription.CompanyName) 
+            ? subscription.CompanyName 
+            : "your organization";
+
+        return $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset=""utf-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+</head>
+<body style=""font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333333; max-width: 600px; margin: 0 auto; padding: 20px;"">
+    <div style=""background: linear-gradient(135deg, #006e95 0%, #004d6e 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;"">
+        <h1 style=""color: #ffffff; margin: 0; font-size: 28px;"">🔐 ComsignTrust CCMS</h1>
+        <p style=""color: #e1faff; margin: 10px 0 0 0; font-size: 16px;"">Credential Management System</p>
+    </div>
+    
+    <div style=""background: #ffffff; padding: 30px; border: 1px solid #e0e0e0; border-top: none;"">
+        <h2 style=""color: #006e95; margin-top: 0;"">Your CCMS Environment is Being Prepared ⚙️</h2>
+        
+        <p>Dear {customerName},</p>
+        
+        <p>Thank you for choosing <strong>ComsignTrust CCMS</strong> for {companyName}!</p>
+        
+        <p>We're excited to let you know that your dedicated CCMS environment is now being provisioned. Our team is setting up your secure infrastructure in Azure and connecting it to Microsoft Entra ID.</p>
+        
+        <div style=""background: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107;"">
+            <h3 style=""color: #856404; margin-top: 0;"">⏳ What's Happening Now:</h3>
+            <ul style=""margin: 0; padding-left: 20px; color: #856404;"">
+                <li>Deploying your dedicated CCMS container</li>
+                <li>Configuring Microsoft Entra ID integration</li>
+                <li>Setting up secure access controls</li>
+                <li>Initializing your credential management workspace</li>
+            </ul>
+        </div>
+        
+        <div style=""background: #e1faff; padding: 20px; border-radius: 8px; margin: 20px 0;"">
+            <h3 style=""color: #006e95; margin-top: 0;"">Subscription Details:</h3>
+            <table style=""width: 100%; border-collapse: collapse;"">
+                <tr>
+                    <td style=""padding: 8px 0; color: #666;"">Company:</td>
+                    <td style=""padding: 8px 0; font-weight: bold;"">{companyName}</td>
+                </tr>
+                <tr>
+                    <td style=""padding: 8px 0; color: #666;"">Plan:</td>
+                    <td style=""padding: 8px 0; font-weight: bold;"">{subscription.PlanId}</td>
+                </tr>
+                <tr>
+                    <td style=""padding: 8px 0; color: #666;"">Deployment ID:</td>
+                    <td style=""padding: 8px 0; font-weight: bold;"">{subscription.IaCDeploymentId ?? "Processing..."}</td>
+                </tr>
+            </table>
+        </div>
+        
+        <p><strong>What's next?</strong> You will receive another email once your CCMS environment is ready with your access URL and login instructions.</p>
+        
+        <p>This typically takes a few minutes, but may take longer during peak times.</p>
+        
+        <div style=""background: #f8f8f8; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;"">
+            <p style=""margin: 0 0 15px 0;"">Have questions while you wait?</p>
+            <a href=""mailto:support@comsigntrust.com"" style=""background: #006e95; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;"">Contact Support</a>
+        </div>
+    </div>
+    
+    <div style=""background: #f5f5f5; padding: 20px; text-align: center; border-radius: 0 0 8px 8px; border: 1px solid #e0e0e0; border-top: none;"">
+        <p style=""margin: 0; color: #666; font-size: 14px;"">
+            © {DateTime.UtcNow.Year} ComsignTrust. All rights reserved.<br>
+            <a href=""mailto:support@comsigntrust.com"" style=""color: #006e95;"">support@comsigntrust.com</a>
+        </p>
+    </div>
+</body>
+</html>";
+    }
+
+    private static string GenerateInvitationEmailBody(MarketplaceSubscription subscription)
     {
         var customerName = !string.IsNullOrEmpty(subscription.CustomerName) 
             ? subscription.CustomerName 
@@ -135,7 +244,7 @@ public class EmailService : IEmailService
             if (!string.IsNullOrEmpty(featuresList))
             {
                 featuresHtml = $@"
-                <h3 style=""color: #006e95; margin-top: 20px;"">Your Selected Token Packages:</h3>
+                <h3 style=""color: #006e95; margin-top: 20px;"">Your Enabled Capabilities:</h3>
                 <ul style=""line-height: 1.8;"">
                     {featuresList}
                 </ul>";
@@ -151,31 +260,33 @@ public class EmailService : IEmailService
 </head>
 <body style=""font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333333; max-width: 600px; margin: 0 auto; padding: 20px;"">
     <div style=""background: linear-gradient(135deg, #006e95 0%, #004d6e 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;"">
-        <h1 style=""color: #ffffff; margin: 0; font-size: 28px;"">🔐 ComsignTrust CMS</h1>
+        <h1 style=""color: #ffffff; margin: 0; font-size: 28px;"">🔐 ComsignTrust CCMS</h1>
         <p style=""color: #e1faff; margin: 10px 0 0 0; font-size: 16px;"">Credential Management System</p>
     </div>
     
     <div style=""background: #ffffff; padding: 30px; border: 1px solid #e0e0e0; border-top: none;"">
-        <h2 style=""color: #006e95; margin-top: 0;"">Welcome, {customerName}! 🎉</h2>
+        <h2 style=""color: #006e95; margin-top: 0;"">Your CCMS is Ready! 🎉</h2>
         
-        <p>Thank you for subscribing to <strong>ComsignTrust CMS</strong>! We're excited to have {companyName} on board.</p>
+        <p>Dear {customerName},</p>
         
-        <p>Your subscription has been successfully activated and you're ready to start managing your credentials securely.</p>
+        <p>Great news! Your <strong>ComsignTrust CCMS</strong> environment for {companyName} has been successfully provisioned and is ready for use.</p>
+        
+        <div style=""background: #d4edda; padding: 25px; border-radius: 8px; margin: 20px 0; text-align: center; border: 1px solid #c3e6cb;"">
+            <h3 style=""color: #155724; margin: 0 0 15px 0;"">✅ Your CCMS Access URL:</h3>
+            <a href=""{subscription.CcmsUrl}"" style=""background: #28a745; color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold; font-size: 16px;"">Access Your CCMS</a>
+            <p style=""margin: 15px 0 0 0; color: #155724; font-size: 14px; word-break: break-all;"">{subscription.CcmsUrl}</p>
+        </div>
         
         <div style=""background: #e1faff; padding: 20px; border-radius: 8px; margin: 20px 0;"">
             <h3 style=""color: #006e95; margin-top: 0;"">Subscription Details:</h3>
             <table style=""width: 100%; border-collapse: collapse;"">
                 <tr>
-                    <td style=""padding: 8px 0; color: #666;"">Subscription ID:</td>
-                    <td style=""padding: 8px 0; font-weight: bold;"">{subscription.AzureSubscriptionId}</td>
+                    <td style=""padding: 8px 0; color: #666;"">Company:</td>
+                    <td style=""padding: 8px 0; font-weight: bold;"">{companyName}</td>
                 </tr>
                 <tr>
                     <td style=""padding: 8px 0; color: #666;"">Plan:</td>
                     <td style=""padding: 8px 0; font-weight: bold;"">{subscription.PlanId}</td>
-                </tr>
-                <tr>
-                    <td style=""padding: 8px 0; color: #666;"">Company:</td>
-                    <td style=""padding: 8px 0; font-weight: bold;"">{companyName}</td>
                 </tr>
                 <tr>
                     <td style=""padding: 8px 0; color: #666;"">Activated:</td>
@@ -188,10 +299,10 @@ public class EmailService : IEmailService
         
         <h3 style=""color: #006e95; margin-top: 20px;"">Getting Started:</h3>
         <ol style=""line-height: 2;"">
-            <li>Access your dashboard through the Azure Portal</li>
+            <li>Click the access button above to open your CCMS</li>
+            <li>Sign in with your Microsoft Entra ID credentials</li>
             <li>Configure your credential management settings</li>
             <li>Start issuing and managing tokens for your organization</li>
-            <li>Monitor your usage in real-time</li>
         </ol>
         
         <div style=""background: #f8f8f8; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;"">
