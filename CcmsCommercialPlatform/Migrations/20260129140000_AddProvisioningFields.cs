@@ -12,45 +12,60 @@ namespace CcmsCommercialPlatform.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
+                name: "WhitelistIps",
+                schema: "CcmsCommercialPlatform",
+                table: "MarketplaceSubscriptions",
+                type: "nvarchar(max)",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AddColumn<string>(
                 name: "IaCDeploymentId",
                 schema: "CcmsCommercialPlatform",
                 table: "MarketplaceSubscriptions",
-                type: "TEXT",
+                type: "nvarchar(450)",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "CcmsUrl",
                 schema: "CcmsCommercialPlatform",
                 table: "MarketplaceSubscriptions",
-                type: "TEXT",
+                type: "nvarchar(500)",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "ProvisioningMetadata",
                 schema: "CcmsCommercialPlatform",
                 table: "MarketplaceSubscriptions",
-                type: "TEXT",
+                type: "nvarchar(max)",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "ProvisioningErrorMessage",
                 schema: "CcmsCommercialPlatform",
                 table: "MarketplaceSubscriptions",
-                type: "TEXT",
+                type: "nvarchar(max)",
                 nullable: true);
 
             migrationBuilder.AddColumn<DateTime>(
                 name: "ProvisioningRequestedAt",
                 schema: "CcmsCommercialPlatform",
                 table: "MarketplaceSubscriptions",
-                type: "TEXT",
+                type: "datetime2",
                 nullable: true);
 
             migrationBuilder.AddColumn<DateTime>(
                 name: "ProvisioningCompletedAt",
                 schema: "CcmsCommercialPlatform",
                 table: "MarketplaceSubscriptions",
-                type: "TEXT",
+                type: "datetime2",
+                nullable: true);
+
+            migrationBuilder.AddColumn<DateTime>(
+                name: "AzureActivatedAt",
+                schema: "CcmsCommercialPlatform",
+                table: "MarketplaceSubscriptions",
+                type: "datetime2",
                 nullable: true);
         }
 
@@ -58,6 +73,11 @@ namespace CcmsCommercialPlatform.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
+                name: "WhitelistIps",
+                schema: "CcmsCommercialPlatform",
+                table: "MarketplaceSubscriptions");
+
+            migrationBuilder.DropColumn(
                 name: "IaCDeploymentId",
                 schema: "CcmsCommercialPlatform",
                 table: "MarketplaceSubscriptions");
@@ -84,6 +104,11 @@ namespace CcmsCommercialPlatform.Migrations
 
             migrationBuilder.DropColumn(
                 name: "ProvisioningCompletedAt",
+                schema: "CcmsCommercialPlatform",
+                table: "MarketplaceSubscriptions");
+
+            migrationBuilder.DropColumn(
+                name: "AzureActivatedAt",
                 schema: "CcmsCommercialPlatform",
                 table: "MarketplaceSubscriptions");
         }

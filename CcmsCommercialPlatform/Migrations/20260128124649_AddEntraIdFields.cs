@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -14,7 +14,7 @@ namespace CcmsCommercialPlatform.Migrations
                 name: "EntraClientId",
                 schema: "CcmsCommercialPlatform",
                 table: "MarketplaceSubscriptions",
-                type: "TEXT",
+                type: "nvarchar(450)",
                 nullable: false,
                 defaultValue: "");
 
@@ -22,7 +22,7 @@ namespace CcmsCommercialPlatform.Migrations
                 name: "EntraClientSecret",
                 schema: "CcmsCommercialPlatform",
                 table: "MarketplaceSubscriptions",
-                type: "TEXT",
+                type: "nvarchar(max)",
                 nullable: false,
                 defaultValue: "");
 
@@ -30,7 +30,7 @@ namespace CcmsCommercialPlatform.Migrations
                 name: "EntraTenantId",
                 schema: "CcmsCommercialPlatform",
                 table: "MarketplaceSubscriptions",
-                type: "TEXT",
+                type: "nvarchar(450)",
                 nullable: false,
                 defaultValue: "");
         }
