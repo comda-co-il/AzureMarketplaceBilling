@@ -17,9 +17,9 @@ RUN dotnet restore "CcmsCommercialPlatform/CcmsCommercialPlatform.csproj"
 # Copy the rest of the source
 COPY . .
 
-# Build the backend
+# Build the backend (skip client app build as it's done separately in nodebuild stage)
 WORKDIR "/src/CcmsCommercialPlatform"
-RUN dotnet build "CcmsCommercialPlatform.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN dotnet build "CcmsCommercialPlatform.csproj" -c $BUILD_CONFIGURATION -o /app/build /p:SkipClientAppBuild=true
 
 # ---- React/Vite build step ----
 FROM node:20 AS nodebuild
@@ -33,7 +33,7 @@ RUN npm run build
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
 
-RUN dotnet publish "CcmsCommercialPlatform.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "CcmsCommercialPlatform.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false /p:SkipClientAppBuild=true
 
 # Copy built React files into wwwroot
 COPY --from=nodebuild /client/ClientApp/dist /app/publish/wwwroot

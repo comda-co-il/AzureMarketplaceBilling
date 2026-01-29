@@ -25,8 +25,8 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
   </ItemGroup>
 
-  <!-- Build frontend on project build -->
-  <Target Name="BuildClientApp" BeforeTargets="Build" Condition="Exists('$(SpaRoot)package.json')">
+  <!-- Build frontend on project build (skip in Docker/CI where BuildClientApp=false) -->
+  <Target Name="BuildClientApp" BeforeTargets="Build" Condition="Exists('$(SpaRoot)package.json') And '$(SkipClientAppBuild)' != 'true'">
     <Message Importance="high" Text="Building React frontend..." />
     <Exec WorkingDirectory="$(SpaRoot)" Command="npm run build" />
   </Target>

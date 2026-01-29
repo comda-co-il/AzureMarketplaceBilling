@@ -203,6 +203,8 @@ export interface SubmitCustomerInfoRequest {
   entraClientId: string;
   entraClientSecret: string;
   entraTenantId: string;
+  // IP Whitelist for CCMS instance
+  whitelistIps?: string[];
 }
 
 export interface FeatureSelectionItem {

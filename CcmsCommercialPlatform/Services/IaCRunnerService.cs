@@ -78,6 +78,10 @@ public class IaCRunnerService : IIaCRunnerService
                 Quantity = f.Quantity,
                 PricePerUnit = f.PricePerUnit
             }).ToList(),
+            WhitelistIps = string.IsNullOrEmpty(subscription.WhitelistIps) 
+                ? [] 
+                : [.. subscription.WhitelistIps.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)],
+            WebhookUrl = $"{_configuration["ApplicationUrl"]?.TrimEnd('/')}/api/webhook/ccms-provisioning",
             Timestamp = DateTime.UtcNow
         };
         

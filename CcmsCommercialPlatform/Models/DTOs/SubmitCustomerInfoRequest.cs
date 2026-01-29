@@ -48,4 +48,9 @@ public class SubmitCustomerInfoRequest
     /// </summary>
     [Required]
     public string EntraTenantId { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// List of IP addresses/CIDR ranges to whitelist for the CCMS instance
+    /// </summary>
+    public List<string> WhitelistIps { get; set; } = [];
 }

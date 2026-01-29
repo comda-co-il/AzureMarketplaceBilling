@@ -43,7 +43,17 @@ public class IaCRunnerRequest
     /// <summary>
     /// Selected features/tokens for metered billing
     /// </summary>
-    public List<IaCRunnerFeature> Features { get; set; } = new();
+    public List<IaCRunnerFeature> Features { get; set; } = [];
+    
+    /// <summary>
+    /// List of IP addresses/CIDR ranges to whitelist for the CCMS instance
+    /// </summary>
+    public List<string> WhitelistIps { get; set; } = [];
+    
+    /// <summary>
+    /// Webhook URL for the IaC Runner to call back when provisioning is complete
+    /// </summary>
+    public string WebhookUrl { get; set; } = string.Empty;
     
     /// <summary>
     /// Timestamp of the request

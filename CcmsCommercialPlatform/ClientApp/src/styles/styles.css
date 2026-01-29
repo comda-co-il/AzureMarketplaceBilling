@@ -2682,9 +2682,9 @@ a:hover {
 }
 
 .ct-wizard-step__number {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
   border-radius: 50%;
   background: var(--ct-gray-300);
   color: var(--ct-gray-600);
@@ -2697,19 +2697,19 @@ a:hover {
 }
 
 .ct-wizard-step__label {
-  margin-left: var(--ct-space-xs);
-  font-size: var(--ct-font-size-xs);
+  margin-left: 4px;
+  font-size: 11px;
   color: var(--ct-gray-500);
   font-weight: 500;
   white-space: nowrap;
 }
 
 .ct-wizard-step__line {
-  width: 40px;
-  min-width: 30px;
+  width: 20px;
+  min-width: 12px;
   height: 2px;
   background: var(--ct-gray-300);
-  margin: 0 var(--ct-space-sm);
+  margin: 0 var(--ct-space-xs);
 }
 
 .ct-wizard-step--active .ct-wizard-step__number {
@@ -3405,6 +3405,158 @@ a:hover {
   background-color: var(--ct-primary);
   color: var(--ct-white);
   text-decoration: none;
+}
+
+/* ==========================================================================
+   IP Whitelist Section Styles
+   ========================================================================== */
+
+.ct-whitelist-section {
+  margin-top: var(--ct-space-xl);
+  padding: var(--ct-space-lg);
+  background-color: var(--ct-gray-50);
+  border: 1px solid var(--ct-gray-200);
+  border-radius: var(--ct-radius-lg);
+}
+
+.ct-whitelist-section__header {
+  margin-bottom: var(--ct-space-md);
+}
+
+.ct-whitelist-section__icon {
+  display: none;
+}
+
+.ct-whitelist-section__header-content {
+  flex: 1;
+}
+
+.ct-whitelist-section__header h3 {
+  margin: 0 0 var(--ct-space-xs) 0;
+  font-size: var(--ct-font-size-base);
+  font-weight: 600;
+  color: var(--ct-gray-800);
+}
+
+.ct-whitelist-section__description {
+  margin: 0;
+  font-size: var(--ct-font-size-sm);
+  color: var(--ct-gray-600);
+  line-height: 1.5;
+}
+
+.ct-whitelist-section__input-row {
+  display: flex;
+  gap: var(--ct-space-sm);
+  margin-bottom: var(--ct-space-xs);
+}
+
+.ct-whitelist-section__input-row input {
+  flex: 1;
+  background-color: var(--ct-white);
+}
+
+.ct-whitelist-section__add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ct-space-xs);
+  padding: var(--ct-space-sm) var(--ct-space-md);
+  background-color: var(--ct-primary);
+  border: none;
+  border-radius: var(--ct-radius-md);
+  color: white;
+  font-size: var(--ct-font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.ct-whitelist-section__add-btn:hover {
+  background-color: var(--ct-primary-dark);
+}
+
+.ct-whitelist-section__list {
+  margin-top: var(--ct-space-md);
+}
+
+.ct-whitelist-section__list-header {
+  margin-bottom: var(--ct-space-sm);
+}
+
+.ct-whitelist-section__list label {
+  display: flex;
+  align-items: center;
+  gap: var(--ct-space-sm);
+  margin: 0;
+  font-size: var(--ct-font-size-sm);
+  font-weight: 500;
+  color: var(--ct-gray-700);
+}
+
+.ct-whitelist-section__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  background-color: var(--ct-gray-200);
+  color: var(--ct-gray-700);
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 10px;
+}
+
+.ct-whitelist-section__ip-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ct-space-sm);
+}
+
+.ct-whitelist-section__ip-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ct-space-xs);
+  padding: 6px 8px 6px 12px;
+  background-color: var(--ct-white);
+  border: 1px solid var(--ct-gray-300);
+  border-radius: var(--ct-radius-md);
+  font-size: var(--ct-font-size-sm);
+}
+
+.ct-whitelist-section__ip-icon {
+  display: none;
+}
+
+.ct-whitelist-section__ip-value {
+  font-family: var(--ct-font-mono);
+  font-size: 13px;
+  color: var(--ct-gray-700);
+}
+
+.ct-whitelist-section__remove-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  color: var(--ct-gray-400);
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.15s ease;
+}
+
+.ct-whitelist-section__remove-btn:hover {
+  background-color: var(--ct-gray-100);
+  color: var(--ct-error);
 }
 
 /* ==========================================================================

@@ -85,6 +85,11 @@ public class MarketplaceSubscription
     /// </summary>
     public string EntraTenantId { get; set; } = string.Empty;
     
+    /// <summary>
+    /// Comma-separated list of IP addresses/CIDR ranges to whitelist for the CCMS instance
+    /// </summary>
+    public string WhitelistIps { get; set; } = string.Empty;
+    
     // IaC Runner / Provisioning fields
     /// <summary>
     /// Deployment ID returned from IaC Runner initial POST request
@@ -117,6 +122,7 @@ public class MarketplaceSubscription
     public DateTime? SubmittedToExternalSystemAt { get; set; } // Kept for backward compatibility
     public DateTime? ProvisioningRequestedAt { get; set; }
     public DateTime? ProvisioningCompletedAt { get; set; }
+    public DateTime? AzureActivatedAt { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     

@@ -129,6 +129,9 @@ public class MarketplaceSubscriptionService : IMarketplaceSubscriptionService
         subscription.EntraClientSecret = request.EntraClientSecret;
         subscription.EntraTenantId = request.EntraTenantId;
         
+        // Update IP whitelist
+        subscription.WhitelistIps = string.Join(",", request.WhitelistIps ?? []);
+        
         subscription.CustomerInfoSubmittedAt = DateTime.UtcNow;
         subscription.Status = MarketplaceSubscriptionStatus.PendingFeatureSelection;
         subscription.UpdatedAt = DateTime.UtcNow;
@@ -312,10 +315,44 @@ public class MarketplaceSubscriptionService : IMarketplaceSubscriptionService
                 subscription.Id,
                 ccmsUrl);
             
+            // Notify Azure that the subscription is now active
+            try
+            {
+                bool activated = await _marketplaceClient.ActivateSubscriptionAsync(
+                    subscription.AzureSubscriptionId,
+                    subscription.PlanId);
+                
+                if (activated)
+                {
+                    subscription.AzureActivatedAt = DateTime.UtcNow;
+                    await _context.SaveChangesAsync();
+                    
+                    _logger.LogInformation(
+                        "Azure subscription activated for MarketplaceSubscription Id={Id}, AzureSubscriptionId={AzureSubscriptionId}",
+                        subscription.Id,
+                        subscription.AzureSubscriptionId);
+                }
+                else
+                {
+                    _logger.LogWarning(
+                        "Failed to activate Azure subscription for MarketplaceSubscription Id={Id}, AzureSubscriptionId={AzureSubscriptionId}",
+                        subscription.Id,
+                        subscription.AzureSubscriptionId);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log but don't fail - the provisioning completed successfully
+                _logger.LogError(ex,
+                    "Error activating Azure subscription for MarketplaceSubscription Id={Id}, AzureSubscriptionId={AzureSubscriptionId}",
+                    subscription.Id,
+                    subscription.AzureSubscriptionId);
+            }
+            
             // Send invitation email: "Your CCMS is ready - here's the URL"
             try
             {
-                var emailSent = await _emailService.SendInvitationEmailAsync(subscription);
+                bool emailSent = await _emailService.SendInvitationEmailAsync(subscription);
                 if (emailSent)
                 {
                     _logger.LogInformation(

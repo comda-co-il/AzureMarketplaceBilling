@@ -11,7 +11,7 @@ import type {
   FeatureSelectionItem,
 } from '../types';
 
-type Step = 'sign-in' | 'resolving' | 'customer-info' | 'feature-selection' | 'thank-you';
+type Step = 'sign-in' | 'resolving' | 'customer-info' | 'technical-config' | 'feature-selection' | 'thank-you';
 
 interface FeatureState extends AvailableFeature {
   isEnabled: boolean;
@@ -70,6 +70,11 @@ export function AzureLandingPage() {
   const [entraClientSecret, setEntraClientSecret] = useState('');
   const [entraTenantId, setEntraTenantId] = useState('');
   const [entraErrors, setEntraErrors] = useState<{ clientId?: string; clientSecret?: string; tenantId?: string }>({});
+
+  // IP Whitelist for CCMS instance
+  const [whitelistIps, setWhitelistIps] = useState<string[]>([]);
+  const [newIpAddress, setNewIpAddress] = useState('');
+  const [ipError, setIpError] = useState<string | undefined>();
 
   // Step 0: Handle authentication state
   // When user is authenticated, move to resolving step
@@ -185,8 +190,70 @@ export function AzureLandingPage() {
     }
   }, [userInfo, hasPrefilledFromSSO, currentStep]);
 
-  // Step 2: Submit customer info
-  const handleSubmitCustomerInfo = async (e: React.FormEvent) => {
+  // IP Whitelist handlers
+  const validateIpAddress = (ip: string): boolean => {
+    // Validate IPv4 address
+    const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
+    // Validate IPv4 CIDR notation
+    const ipv4CidrRegex = /^(\d{1,3}\.){3}\d{1,3}\/\d{1,2}$/;
+    // Validate IPv6 address (simplified)
+    const ipv6Regex = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
+    // Validate IPv6 CIDR
+    const ipv6CidrRegex = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\/\d{1,3}$/;
+    
+    const trimmedIp = ip.trim();
+    
+    if (ipv4Regex.test(trimmedIp)) {
+      // Validate each octet is 0-255
+      const octets = trimmedIp.split('.');
+      return octets.every(octet => {
+        const num = parseInt(octet, 10);
+        return num >= 0 && num <= 255;
+      });
+    }
+    
+    if (ipv4CidrRegex.test(trimmedIp)) {
+      const [ipPart, cidr] = trimmedIp.split('/');
+      const octets = ipPart.split('.');
+      const cidrNum = parseInt(cidr, 10);
+      return octets.every(octet => {
+        const num = parseInt(octet, 10);
+        return num >= 0 && num <= 255;
+      }) && cidrNum >= 0 && cidrNum <= 32;
+    }
+    
+    return ipv6Regex.test(trimmedIp) || ipv6CidrRegex.test(trimmedIp);
+  };
+
+  const handleAddIp = () => {
+    const trimmedIp = newIpAddress.trim();
+    
+    if (!trimmedIp) {
+      setIpError('Please enter an IP address');
+      return;
+    }
+    
+    if (!validateIpAddress(trimmedIp)) {
+      setIpError('Please enter a valid IP address or CIDR range (e.g., 192.168.1.1 or 10.0.0.0/24)');
+      return;
+    }
+    
+    if (whitelistIps.includes(trimmedIp)) {
+      setIpError('This IP address is already in the list');
+      return;
+    }
+    
+    setWhitelistIps([...whitelistIps, trimmedIp]);
+    setNewIpAddress('');
+    setIpError(undefined);
+  };
+
+  const handleRemoveIp = (index: number) => {
+    setWhitelistIps(whitelistIps.filter((_, i) => i !== index));
+  };
+
+  // Step 2: Submit customer info (basic details only)
+  const handleSubmitCustomerInfo = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!resolvedInfo) return;
@@ -197,7 +264,7 @@ export function AzureLandingPage() {
       setCountryCode('XX');
     }
 
-    // Validate all form fields
+    // Validate basic form fields
     let isValid = true;
     const newFormErrors: typeof formErrors = {};
     setCountryError('');
@@ -232,8 +299,6 @@ export function AzureLandingPage() {
 
     // Validate phone number (optional, but if provided must be valid format)
     if (phoneNumber.trim()) {
-      // More permissive regex that accepts common international phone formats
-      // Allows: +, digits, spaces, dashes, dots, parentheses anywhere
       const phoneRegex = /^[+]?[\d\s\-().]{7,20}$/;
       if (!phoneRegex.test(phoneNumber.trim())) {
         newFormErrors.phoneNumber = 'Please enter a valid phone number (7-20 characters)';
@@ -251,7 +316,23 @@ export function AzureLandingPage() {
       setCountryOtherError('');
     }
 
-    // Validate Entra ID fields (customer's app registration for SaaS integration)
+    if (!isValid) {
+      return;
+    }
+
+    // Move to technical configuration step
+    setCurrentStep('technical-config');
+  };
+
+  // Step 3: Submit technical configuration (Entra ID + IP Whitelist)
+  const handleSubmitTechnicalConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!resolvedInfo) return;
+
+    let isValid = true;
+
+    // Validate Entra ID fields
     const newEntraErrors: { clientId?: string; clientSecret?: string; tenantId?: string } = {};
     
     if (!entraClientId.trim()) {
@@ -286,6 +367,9 @@ export function AzureLandingPage() {
       return;
     }
 
+    // Get final country code
+    const finalCountryCode = countryCode || 'XX';
+
     try {
       setIsLoading(true);
       setError(null);
@@ -304,13 +388,15 @@ export function AzureLandingPage() {
         entraClientId: entraClientId.trim(),
         entraClientSecret: entraClientSecret.trim(),
         entraTenantId: finalTenantId,
+        // IP Whitelist for CCMS instance
+        whitelistIps: whitelistIps.filter(ip => ip.trim()),
       });
 
       setSubscription(result);
       setCurrentStep('feature-selection');
     } catch (err) {
-      console.error('Failed to submit customer info:', err);
-      setError('Failed to submit customer information. Please try again.');
+      console.error('Failed to submit technical configuration:', err);
+      setError('Failed to submit configuration. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -407,10 +493,12 @@ export function AzureLandingPage() {
         return 2;
       case 'customer-info':
         return 3;
-      case 'feature-selection':
+      case 'technical-config':
         return 4;
-      case 'thank-you':
+      case 'feature-selection':
         return 5;
+      case 'thank-you':
+        return 6;
       default:
         return 1;
     }
@@ -420,10 +508,11 @@ export function AzureLandingPage() {
   const renderStepIndicator = () => {
     const steps = [
       { num: 1, label: 'Sign In' },
-      { num: 2, label: 'Verification' },
-      { num: 3, label: 'Your Details' },
-      { num: 4, label: 'Choose Tokens' },
-      { num: 5, label: 'Complete' },
+      { num: 2, label: 'Verify' },
+      { num: 3, label: 'Details' },
+      { num: 4, label: 'Setup' },
+      { num: 5, label: 'Tokens' },
+      { num: 6, label: 'Done' },
     ];
 
     const currentNum = getStepNumber();
@@ -522,7 +611,7 @@ export function AzureLandingPage() {
     </Card>
   );
 
-  // Render customer info form
+  // Render customer info form (Step 3 - Basic Info)
   const renderCustomerInfoStep = () => (
     <Card>
       <CardHeader>
@@ -552,12 +641,6 @@ export function AzureLandingPage() {
               <span className="ct-resolved-info__label">Plan:</span>
               <span className="ct-resolved-info__value">{resolvedInfo.planId}</span>
             </div>
-            {userInfo?.tenantId && (
-              <div className="ct-resolved-info__item">
-                <span className="ct-resolved-info__label">Tenant ID:</span>
-                <span className="ct-resolved-info__value ct-resolved-info__value--mono">{userInfo.tenantId}</span>
-              </div>
-            )}
           </div>
         )}
 
@@ -660,14 +743,50 @@ export function AzureLandingPage() {
             </div>
           </div>
 
-          {/* Entra ID (Azure AD) Configuration Section - Required for SaaS Integration */}
+          <div className="ct-form-actions">
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="large" 
+              onClick={() => {
+                setCustomerName('Gal Cohen');
+                setCustomerEmail('galc@comda.co.il');
+                setCompanyName('Comda');
+                setPhoneNumber('+972-50-123-4567');
+                setJobTitle('Software Developer');
+                setCountryCode('IL');
+                setCountryOther('');
+                setCountryError('');
+                setCountryOtherError('');
+                setFormErrors({});
+              }}
+            >
+              Fill Test Data
+            </Button>
+            <Button type="submit" variant="primary" size="large">
+              Continue to Technical Setup
+            </Button>
+          </div>
+        </form>
+      </CardBody>
+    </Card>
+  );
+
+  // Render technical configuration step (Step 4 - Entra ID + IP Whitelist)
+  const renderTechnicalConfigStep = () => (
+    <Card>
+      <CardHeader>
+        <h2>Technical Setup</h2>
+      </CardHeader>
+      <CardBody>
+        <form onSubmit={handleSubmitTechnicalConfig} className="ct-customer-form">
+          {/* Entra ID (Azure AD) Configuration Section */}
           <div className="ct-entra-section">
             <div className="ct-entra-section__header">
               <h3>Microsoft Entra ID Configuration</h3>
               <p className="ct-entra-section__description">
                 To integrate ComsignTrust CMS with your organization, we need your Microsoft Entra ID 
-                (formerly Azure AD) app registration details. This allows us to securely communicate 
-                with your tenant.
+                (formerly Azure AD) app registration details.
               </p>
               <Link to="/entra-id-guide" className="ct-entra-section__guide-link" target="_blank">
                 📖 How to configure Entra ID? (Step-by-step guide)
@@ -678,8 +797,7 @@ export function AzureLandingPage() {
               <span className="ct-entra-section__security-icon">🔒</span>
               <div>
                 <strong>Security Note:</strong> Your credentials are transmitted securely over HTTPS 
-                and encrypted at rest. We recommend using a dedicated app registration with minimal 
-                required permissions for this integration.
+                and encrypted at rest.
               </div>
             </div>
 
@@ -747,6 +865,69 @@ export function AzureLandingPage() {
             </div>
           </div>
 
+          {/* IP Whitelist Section */}
+          <div className="ct-whitelist-section">
+            <div className="ct-whitelist-section__header">
+              <h3>IP Whitelist (Optional)</h3>
+              <p className="ct-whitelist-section__description">
+                Add IP addresses or CIDR ranges to restrict access to your CCMS instance.
+              </p>
+            </div>
+
+            <div className="ct-whitelist-section__input-row">
+              <input
+                type="text"
+                className={`ct-input--primary ${ipError ? 'ct-input--error' : ''}`}
+                value={newIpAddress}
+                onChange={(e) => {
+                  setNewIpAddress(e.target.value);
+                  setIpError(undefined);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddIp();
+                  }
+                }}
+                placeholder="e.g., 192.168.1.1 or 10.0.0.0/24"
+              />
+              <button
+                type="button"
+                className="ct-whitelist-section__add-btn"
+                onClick={handleAddIp}
+              >
+                Add
+              </button>
+            </div>
+            {ipError && <div className="ct-input-error">{ipError}</div>}
+
+            {whitelistIps.length > 0 && (
+              <div className="ct-whitelist-section__list">
+                <div className="ct-whitelist-section__list-header">
+                  <label>
+                    Added IPs
+                    <span className="ct-whitelist-section__count">{whitelistIps.length}</span>
+                  </label>
+                </div>
+                <ul className="ct-whitelist-section__ip-list">
+                  {whitelistIps.map((ip, index) => (
+                    <li key={index} className="ct-whitelist-section__ip-item">
+                      <span className="ct-whitelist-section__ip-value">{ip}</span>
+                      <button
+                        type="button"
+                        className="ct-whitelist-section__remove-btn"
+                        onClick={() => handleRemoveIp(index)}
+                        title="Remove"
+                      >
+                        ×
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+
           <div className="ct-input-group">
             <label className="ct-label--primary">Additional Comments</label>
             <textarea
@@ -763,24 +944,22 @@ export function AzureLandingPage() {
               type="button" 
               variant="outline" 
               size="large" 
+              onClick={() => setCurrentStep('customer-info')}
+            >
+              Back
+            </Button>
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="large" 
               onClick={() => {
-                // Fill with demo/test data
-                setCustomerName('Gal Cohen');
-                setCustomerEmail('galc@comda.co.il');
-                setCompanyName('Comda');
-                setPhoneNumber('+972-50-123-4567');
-                setJobTitle('Software Developer');
-                setCountryCode('IL'); // Israel
-                setCountryOther('');
-                setComments('Demo submission for testing');
                 setEntraClientId('12345678-1234-1234-1234-123456789abc');
                 setEntraClientSecret('demo-client-secret-value-12345');
                 setEntraTenantId('87654321-4321-4321-4321-cba987654321');
-                // Clear any errors
-                setCountryError('');
-                setCountryOtherError('');
+                setWhitelistIps(['192.168.1.0/24', '10.0.0.1', '172.16.0.0/16']);
+                setComments('Demo submission for testing');
                 setEntraErrors({});
-                setFormErrors({});
+                setIpError(undefined);
               }}
             >
               Fill Test Data
@@ -887,7 +1066,7 @@ export function AzureLandingPage() {
           <Button
             variant="outline"
             size="large"
-            onClick={() => setCurrentStep('customer-info')}
+            onClick={() => setCurrentStep('technical-config')}
             disabled={isLoading}
           >
             Back
@@ -987,6 +1166,8 @@ export function AzureLandingPage() {
         return renderResolvingStep();
       case 'customer-info':
         return renderCustomerInfoStep();
+      case 'technical-config':
+        return renderTechnicalConfigStep();
       case 'feature-selection':
         return renderFeatureSelectionStep();
       case 'thank-you':
