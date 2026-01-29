@@ -1,5 +1,13 @@
--- SQL Script to add missing columns to MarketplaceSubscriptions table in Azure SQL
+-- SQL Script to fix MarketplaceSubscriptions table schema in Azure SQL
 -- Run this script against your Azure SQL database
+
+-- FIRST: Drop the old Country column if it exists (replaced by CountryCode/CountryOther)
+IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'[CcmsCommercialPlatform].[MarketplaceSubscriptions]') AND name = 'Country')
+BEGIN
+    ALTER TABLE [CcmsCommercialPlatform].[MarketplaceSubscriptions] DROP COLUMN [Country];
+    PRINT 'Dropped legacy Country column';
+END
+GO
 
 -- Add WhitelistIps column
 IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'[CcmsCommercialPlatform].[MarketplaceSubscriptions]') AND name = 'WhitelistIps')
