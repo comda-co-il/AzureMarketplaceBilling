@@ -62,7 +62,8 @@ public class IaCRunnerService : IIaCRunnerService
             {
                 ClientId = subscription.EntraClientId,
                 ClientSecret = subscription.EntraClientSecret,
-                TenantId = subscription.EntraTenantId
+                TenantId = subscription.EntraTenantId,
+                AdminGroupObjectId = subscription.EntraAdminGroupObjectId
             },
             Purchaser = new IaCRunnerPurchaserInfo
             {

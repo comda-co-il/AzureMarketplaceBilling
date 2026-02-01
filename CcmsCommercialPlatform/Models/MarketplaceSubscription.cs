@@ -86,6 +86,11 @@ public class MarketplaceSubscription
     public string EntraTenantId { get; set; } = string.Empty;
     
     /// <summary>
+    /// Object ID of the Azure AD group whose members should have admin access in CCMS
+    /// </summary>
+    public string EntraAdminGroupObjectId { get; set; } = string.Empty;
+    
+    /// <summary>
     /// Comma-separated list of IP addresses/CIDR ranges to whitelist for the CCMS instance
     /// </summary>
     public string WhitelistIps { get; set; } = string.Empty;

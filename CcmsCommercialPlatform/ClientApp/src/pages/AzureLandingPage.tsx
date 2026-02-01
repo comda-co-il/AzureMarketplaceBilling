@@ -69,7 +69,8 @@ export function AzureLandingPage() {
   const [entraClientId, setEntraClientId] = useState('');
   const [entraClientSecret, setEntraClientSecret] = useState('');
   const [entraTenantId, setEntraTenantId] = useState('');
-  const [entraErrors, setEntraErrors] = useState<{ clientId?: string; clientSecret?: string; tenantId?: string }>({});
+  const [entraAdminGroupObjectId, setEntraAdminGroupObjectId] = useState('');
+  const [entraErrors, setEntraErrors] = useState<{ clientId?: string; clientSecret?: string; tenantId?: string; adminGroupObjectId?: string }>({});
 
   // IP Whitelist for CCMS instance
   const [whitelistIps, setWhitelistIps] = useState<string[]>([]);
@@ -333,7 +334,7 @@ export function AzureLandingPage() {
     let isValid = true;
 
     // Validate Entra ID fields
-    const newEntraErrors: { clientId?: string; clientSecret?: string; tenantId?: string } = {};
+    const newEntraErrors: { clientId?: string; clientSecret?: string; tenantId?: string; adminGroupObjectId?: string } = {};
     
     if (!entraClientId.trim()) {
       newEntraErrors.clientId = 'Application (Client) ID is required';
@@ -358,6 +359,14 @@ export function AzureLandingPage() {
       isValid = false;
     } else if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(finalTenantId)) {
       newEntraErrors.tenantId = 'Please enter a valid GUID format (e.g., 12345678-1234-1234-1234-123456789abc)';
+      isValid = false;
+    }
+    
+    if (!entraAdminGroupObjectId.trim()) {
+      newEntraErrors.adminGroupObjectId = 'Admin Group Object ID is required';
+      isValid = false;
+    } else if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(entraAdminGroupObjectId.trim())) {
+      newEntraErrors.adminGroupObjectId = 'Please enter a valid GUID format (e.g., 12345678-1234-1234-1234-123456789abc)';
       isValid = false;
     }
     
@@ -388,6 +397,7 @@ export function AzureLandingPage() {
         entraClientId: entraClientId.trim(),
         entraClientSecret: entraClientSecret.trim(),
         entraTenantId: finalTenantId,
+        entraAdminGroupObjectId: entraAdminGroupObjectId.trim(),
         // IP Whitelist for CCMS instance
         whitelistIps: whitelistIps.filter(ip => ip.trim()),
       });
@@ -863,6 +873,26 @@ export function AzureLandingPage() {
               </span>
               {entraErrors.clientSecret && <div className="ct-input-error">{entraErrors.clientSecret}</div>}
             </div>
+
+            <div className="ct-input-group">
+              <label className="ct-label--primary">
+                Admin Group Object ID <span className="ct-required">*</span>
+              </label>
+              <input
+                type="text"
+                className={`ct-input--primary ${entraErrors.adminGroupObjectId ? 'ct-input--error' : ''}`}
+                value={entraAdminGroupObjectId}
+                onChange={(e) => {
+                  setEntraAdminGroupObjectId(e.target.value);
+                  setEntraErrors((prev) => ({ ...prev, adminGroupObjectId: undefined }));
+                }}
+                placeholder="03ee4b1a-c976-4e08-9d06-753e12565943"
+              />
+              <span className="ct-input-hint">
+                Object ID of the Azure AD group whose members will have admin access in CCMS. Found in "Groups" → select your admin group → "Object Id".
+              </span>
+              {entraErrors.adminGroupObjectId && <div className="ct-input-error">{entraErrors.adminGroupObjectId}</div>}
+            </div>
           </div>
 
           {/* IP Whitelist Section */}
@@ -956,6 +986,7 @@ export function AzureLandingPage() {
                 setEntraClientId('12345678-1234-1234-1234-123456789abc');
                 setEntraClientSecret('demo-client-secret-value-12345');
                 setEntraTenantId('87654321-4321-4321-4321-cba987654321');
+                setEntraAdminGroupObjectId('03ee4b1a-c976-4e08-9d06-753e12565943');
                 setWhitelistIps(['192.168.1.0/24', '10.0.0.1', '172.16.0.0/16']);
                 setComments('Demo submission for testing');
                 setEntraErrors({});

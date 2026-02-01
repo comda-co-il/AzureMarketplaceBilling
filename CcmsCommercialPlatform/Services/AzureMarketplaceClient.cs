@@ -24,6 +24,16 @@ public class AzureMarketplaceClient : IAzureMarketplaceClient
     // Resource ID for Azure Marketplace API (used to acquire tokens)
     private const string MarketplaceResourceId = "20e940b3-4c77-4b0b-9a53-9e16a1b010a7";
     
+    // Test token constant
+    private const string TestToken = "test";
+    
+    /// <summary>
+    /// Check if this is a test subscription (created from token="test")
+    /// </summary>
+    private static bool IsTestSubscription(string subscriptionId) =>
+        subscriptionId.StartsWith("test-subscription-", StringComparison.OrdinalIgnoreCase) ||
+        subscriptionId.StartsWith("demo-sub-", StringComparison.OrdinalIgnoreCase);
+    
     public AzureMarketplaceClient(
         ILogger<AzureMarketplaceClient> logger,
         IConfiguration configuration,
@@ -74,9 +84,9 @@ public class AzureMarketplaceClient : IAzureMarketplaceClient
     {
         _logger.LogInformation("Resolving Azure Marketplace token...");
         
-        // TODO: Remove this test mode before production deployment
         // Special case: if token is "test", return mock data for testing
-        if (token.Equals("test", StringComparison.OrdinalIgnoreCase))
+        // This works in both development and production for demo purposes
+        if (token.Equals(TestToken, StringComparison.OrdinalIgnoreCase))
         {
             _logger.LogWarning("[TEST MODE] Returning mock subscription data for test token");
             await Task.CompletedTask; // Keep async signature
@@ -185,6 +195,14 @@ public class AzureMarketplaceClient : IAzureMarketplaceClient
             "Activating subscription: {SubscriptionId} with plan: {PlanId}",
             subscriptionId, planId);
         
+        // Handle test subscriptions - skip real API call
+        if (IsTestSubscription(subscriptionId))
+        {
+            _logger.LogWarning("[TEST MODE] Skipping Azure activation for test subscription {SubscriptionId}", subscriptionId);
+            await Task.CompletedTask;
+            return true;
+        }
+        
         try
         {
             var accessToken = await GetAccessTokenAsync();
@@ -234,6 +252,14 @@ public class AzureMarketplaceClient : IAzureMarketplaceClient
         _logger.LogInformation(
             "Reporting usage: ResourceId={ResourceId}, Dimension={Dimension}, Quantity={Quantity}",
             usageEvent.ResourceId, usageEvent.Dimension, usageEvent.Quantity);
+        
+        // Handle test subscriptions - skip real API call
+        if (IsTestSubscription(usageEvent.ResourceId))
+        {
+            _logger.LogWarning("[TEST MODE] Skipping Azure usage reporting for test subscription {ResourceId}", usageEvent.ResourceId);
+            await Task.CompletedTask;
+            return true;
+        }
         
         try
         {
@@ -295,6 +321,14 @@ public class AzureMarketplaceClient : IAzureMarketplaceClient
             "Updating subscription {SubscriptionId} to plan {PlanId}",
             subscriptionId, planId);
         
+        // Handle test subscriptions - skip real API call
+        if (IsTestSubscription(subscriptionId))
+        {
+            _logger.LogWarning("[TEST MODE] Skipping Azure update for test subscription {SubscriptionId}", subscriptionId);
+            await Task.CompletedTask;
+            return true;
+        }
+        
         try
         {
             var accessToken = await GetAccessTokenAsync();
@@ -342,6 +376,14 @@ public class AzureMarketplaceClient : IAzureMarketplaceClient
     public async Task<bool> CancelSubscriptionAsync(string subscriptionId)
     {
         _logger.LogInformation("Cancelling subscription {SubscriptionId}", subscriptionId);
+        
+        // Handle test subscriptions - skip real API call
+        if (IsTestSubscription(subscriptionId))
+        {
+            _logger.LogWarning("[TEST MODE] Skipping Azure cancellation for test subscription {SubscriptionId}", subscriptionId);
+            await Task.CompletedTask;
+            return true;
+        }
         
         try
         {

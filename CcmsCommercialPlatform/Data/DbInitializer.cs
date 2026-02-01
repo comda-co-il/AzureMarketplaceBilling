@@ -9,12 +9,12 @@ public static class DbInitializer
     public static void Initialize(AppDbContext context)
     {
         // Check if using SQLite (for local development)
-        var isSqlite = context.Database.ProviderName?.Contains("Sqlite") ?? false;
+        bool isSqlite = context.Database.ProviderName?.Contains("Sqlite") ?? false;
         
         if (isSqlite)
         {
-            // For SQLite, use EnsureCreated (migrations are SQL Server specific)
-            context.Database.EnsureCreated();
+            // For SQLite in development, handle schema changes automatically
+            InitializeSqlite(context);
         }
         else
         {
@@ -33,7 +33,17 @@ public static class DbInitializer
             }
             
             // Apply migrations for SQL Server
-            context.Database.Migrate();
+            try
+            {
+                context.Database.Migrate();
+            }
+            catch (Exception ex)
+            {
+                // If migrations fail (e.g., due to SQLite-generated migrations), 
+                // manually add missing columns for the provisioning fields
+                Console.WriteLine($"Migration failed, attempting manual schema update: {ex.Message}");
+                ApplyManualSchemaUpdates(context);
+            }
         }
         
         // Check if data already exists
@@ -134,5 +144,160 @@ public static class DbInitializer
         
         context.PlanQuotas.AddRange(quotas);
         context.SaveChanges();
+    }
+    
+    /// <summary>
+    /// Initialize SQLite database with automatic schema updates for development.
+    /// If schema is outdated, drops and recreates the database.
+    /// </summary>
+    private static void InitializeSqlite(AppDbContext context)
+    {
+        bool databaseExists = context.Database.CanConnect();
+        
+        if (!databaseExists)
+        {
+            // Database doesn't exist, create it fresh
+            Console.WriteLine("SQLite database doesn't exist. Creating new database...");
+            context.Database.EnsureCreated();
+            return;
+        }
+        
+        // Database exists - check if schema matches current model
+        bool schemaValid = ValidateSqliteSchema(context);
+        
+        if (!schemaValid)
+        {
+            Console.WriteLine("SQLite schema is outdated. Recreating database with new schema...");
+            
+            // Drop and recreate for development - this is acceptable for local dev
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
+            
+            Console.WriteLine("SQLite database recreated successfully with updated schema.");
+        }
+        else
+        {
+            Console.WriteLine("SQLite schema is up to date.");
+        }
+    }
+    
+    /// <summary>
+    /// Validates that the SQLite database schema matches the current EF model.
+    /// Returns false if any expected columns are missing.
+    /// </summary>
+    private static bool ValidateSqliteSchema(AppDbContext context)
+    {
+        try
+        {
+            // Get expected columns from the MarketplaceSubscription entity (most frequently updated)
+            List<string> expectedColumns =
+            [
+                "EntraClientId",
+                "EntraClientSecret", 
+                "EntraTenantId",
+                "EntraAdminGroupObjectId",
+                "WhitelistIps",
+                "IaCDeploymentId",
+                "CcmsUrl",
+                "ProvisioningMetadata",
+                "ProvisioningErrorMessage",
+                "ProvisioningRequestedAt",
+                "ProvisioningCompletedAt",
+                "AzureActivatedAt"
+            ];
+            
+            // Query SQLite for actual columns in MarketplaceSubscriptions table
+            List<string> actualColumns = [];
+            using (Microsoft.Data.Sqlite.SqliteConnection connection = new(context.Database.GetConnectionString()))
+            {
+                connection.Open();
+                using Microsoft.Data.Sqlite.SqliteCommand command = connection.CreateCommand();
+                command.CommandText = "PRAGMA table_info(MarketplaceSubscriptions);";
+                using Microsoft.Data.Sqlite.SqliteDataReader reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    actualColumns.Add(reader.GetString(1)); // Column name is at index 1
+                }
+            }
+            
+            // Check if all expected columns exist
+            foreach (string expectedColumn in expectedColumns)
+            {
+                if (!actualColumns.Contains(expectedColumn, StringComparer.OrdinalIgnoreCase))
+                {
+                    Console.WriteLine($"Missing column detected: {expectedColumn}");
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Schema validation failed: {ex.Message}");
+            return false;
+        }
+    }
+    
+    /// <summary>
+    /// Manually applies schema updates for SQL Server when migrations fail
+    /// (e.g., when migrations were generated for SQLite)
+    /// </summary>
+    private static void ApplyManualSchemaUpdates(AppDbContext context)
+    {
+        string[] sqlStatements =
+        [
+            // Add WhitelistIps column
+            @"IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'[CcmsCommercialPlatform].[MarketplaceSubscriptions]') AND name = 'WhitelistIps')
+              ALTER TABLE [CcmsCommercialPlatform].[MarketplaceSubscriptions] ADD [WhitelistIps] nvarchar(max) NOT NULL DEFAULT N''",
+            
+            // Add IaCDeploymentId column
+            @"IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'[CcmsCommercialPlatform].[MarketplaceSubscriptions]') AND name = 'IaCDeploymentId')
+              ALTER TABLE [CcmsCommercialPlatform].[MarketplaceSubscriptions] ADD [IaCDeploymentId] nvarchar(max) NULL",
+            
+            // Add CcmsUrl column
+            @"IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'[CcmsCommercialPlatform].[MarketplaceSubscriptions]') AND name = 'CcmsUrl')
+              ALTER TABLE [CcmsCommercialPlatform].[MarketplaceSubscriptions] ADD [CcmsUrl] nvarchar(max) NULL",
+            
+            // Add ProvisioningMetadata column
+            @"IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'[CcmsCommercialPlatform].[MarketplaceSubscriptions]') AND name = 'ProvisioningMetadata')
+              ALTER TABLE [CcmsCommercialPlatform].[MarketplaceSubscriptions] ADD [ProvisioningMetadata] nvarchar(max) NULL",
+            
+            // Add ProvisioningErrorMessage column
+            @"IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'[CcmsCommercialPlatform].[MarketplaceSubscriptions]') AND name = 'ProvisioningErrorMessage')
+              ALTER TABLE [CcmsCommercialPlatform].[MarketplaceSubscriptions] ADD [ProvisioningErrorMessage] nvarchar(max) NULL",
+            
+            // Add ProvisioningRequestedAt column
+            @"IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'[CcmsCommercialPlatform].[MarketplaceSubscriptions]') AND name = 'ProvisioningRequestedAt')
+              ALTER TABLE [CcmsCommercialPlatform].[MarketplaceSubscriptions] ADD [ProvisioningRequestedAt] datetime2 NULL",
+            
+            // Add ProvisioningCompletedAt column
+            @"IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'[CcmsCommercialPlatform].[MarketplaceSubscriptions]') AND name = 'ProvisioningCompletedAt')
+              ALTER TABLE [CcmsCommercialPlatform].[MarketplaceSubscriptions] ADD [ProvisioningCompletedAt] datetime2 NULL",
+            
+            // Add AzureActivatedAt column
+            @"IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'[CcmsCommercialPlatform].[MarketplaceSubscriptions]') AND name = 'AzureActivatedAt')
+              ALTER TABLE [CcmsCommercialPlatform].[MarketplaceSubscriptions] ADD [AzureActivatedAt] datetime2 NULL",
+            
+            // Add EntraAdminGroupObjectId column
+            @"IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'[CcmsCommercialPlatform].[MarketplaceSubscriptions]') AND name = 'EntraAdminGroupObjectId')
+              ALTER TABLE [CcmsCommercialPlatform].[MarketplaceSubscriptions] ADD [EntraAdminGroupObjectId] nvarchar(450) NOT NULL DEFAULT N''"
+        ];
+        
+        foreach (string sql in sqlStatements)
+        {
+            try
+            {
+                context.Database.ExecuteSqlRaw(sql);
+                Console.WriteLine("Schema update applied successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Schema update warning: {ex.Message}");
+                // Continue with other statements even if one fails
+            }
+        }
+        
+        Console.WriteLine("Manual schema updates completed");
     }
 }

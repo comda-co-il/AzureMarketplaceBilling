@@ -36,8 +36,11 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
         
-        // Set default schema for all entities
-        modelBuilder.HasDefaultSchema(Schema);
+        // Set default schema for all entities (only for SQL Server, SQLite doesn't support schemas)
+        if (!Database.IsSqlite())
+        {
+            modelBuilder.HasDefaultSchema(Schema);
+        }
         
         // Plan configuration
         modelBuilder.Entity<Plan>(entity =>

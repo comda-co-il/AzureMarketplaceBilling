@@ -89,6 +89,11 @@ public class IaCRunnerEntraConfig
     /// Directory (tenant) ID from customer's Azure AD
     /// </summary>
     public string TenantId { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Object ID of the Azure AD group whose members should have admin access in CCMS
+    /// </summary>
+    public string AdminGroupObjectId { get; set; } = string.Empty;
 }
 
 public class IaCRunnerPurchaserInfo

@@ -203,6 +203,8 @@ export interface SubmitCustomerInfoRequest {
   entraClientId: string;
   entraClientSecret: string;
   entraTenantId: string;
+  // Admin group object ID - members of this group will be admins in CCMS
+  entraAdminGroupObjectId: string;
   // IP Whitelist for CCMS instance
   whitelistIps?: string[];
 }

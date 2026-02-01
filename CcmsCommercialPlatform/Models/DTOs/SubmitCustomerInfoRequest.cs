@@ -50,6 +50,12 @@ public class SubmitCustomerInfoRequest
     public string EntraTenantId { get; set; } = string.Empty;
     
     /// <summary>
+    /// Object ID of the Azure AD group whose members should have admin access in CCMS
+    /// </summary>
+    [Required]
+    public string EntraAdminGroupObjectId { get; set; } = string.Empty;
+    
+    /// <summary>
     /// List of IP addresses/CIDR ranges to whitelist for the CCMS instance
     /// </summary>
     public List<string> WhitelistIps { get; set; } = [];

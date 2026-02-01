@@ -41,16 +41,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     }
 });
 
-// Configure services based on demo mode
-var isDemo = builder.Configuration.GetValue<bool>("IsDemo");
-if (isDemo)
-{
-    builder.Services.AddScoped<IAzureMarketplaceClient, DemoAzureMarketplaceClient>();
-}
-else
-{
-    builder.Services.AddScoped<IAzureMarketplaceClient, AzureMarketplaceClient>();
-}
+// Always use the real Azure Marketplace client
+// The client handles token="test" specially for demo/testing purposes
+builder.Services.AddScoped<IAzureMarketplaceClient, AzureMarketplaceClient>();
 
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 builder.Services.AddScoped<IMeteredBillingService, MeteredBillingService>();

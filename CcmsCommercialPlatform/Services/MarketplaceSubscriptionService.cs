@@ -128,6 +128,7 @@ public class MarketplaceSubscriptionService : IMarketplaceSubscriptionService
         subscription.EntraClientId = request.EntraClientId;
         subscription.EntraClientSecret = request.EntraClientSecret;
         subscription.EntraTenantId = request.EntraTenantId;
+        subscription.EntraAdminGroupObjectId = request.EntraAdminGroupObjectId;
         
         // Update IP whitelist
         subscription.WhitelistIps = string.Join(",", request.WhitelistIps ?? []);
