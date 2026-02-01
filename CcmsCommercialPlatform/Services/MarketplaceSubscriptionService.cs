@@ -228,14 +228,15 @@ public class MarketplaceSubscriptionService : IMarketplaceSubscriptionService
                 $"Infrastructure provisioning request failed: {iacRunnerResponse.Message}");
         }
         
-        // Provisioning request succeeded - save the deployment ID and update status
+        // Provisioning job queued - save the deployment ID and set status to PendingProvisioning
+        // IaCRunner will poll for this job and change status to Provisioning when claimed
         _logger.LogInformation(
-            "IaC Runner provisioning request accepted for MarketplaceSubscription Id={Id}. Deployment Id: {DeploymentId}",
+            "Provisioning job queued for MarketplaceSubscription Id={Id}. Pending Deployment Id: {DeploymentId}",
             subscription.Id,
             iacRunnerResponse.Id);
         
         subscription.IaCDeploymentId = iacRunnerResponse.Id;
-        subscription.Status = MarketplaceSubscriptionStatus.Provisioning;
+        subscription.Status = MarketplaceSubscriptionStatus.PendingProvisioning;
         subscription.ProvisioningRequestedAt = DateTime.UtcNow;
         subscription.UpdatedAt = DateTime.UtcNow;
         
@@ -453,6 +454,7 @@ public class MarketplaceSubscriptionService : IMarketplaceSubscriptionService
             MarketplaceSubscriptionStatus.PendingCustomerInfo => "Pending Customer Info",
             MarketplaceSubscriptionStatus.PendingFeatureSelection => "Pending Feature Selection",
             MarketplaceSubscriptionStatus.PendingSubmission => "Pending Submission",
+            MarketplaceSubscriptionStatus.PendingProvisioning => "Pending Provisioning",
             MarketplaceSubscriptionStatus.Provisioning => "Provisioning",
             MarketplaceSubscriptionStatus.ProvisioningFailed => "Provisioning Failed",
             MarketplaceSubscriptionStatus.Active => "Active",

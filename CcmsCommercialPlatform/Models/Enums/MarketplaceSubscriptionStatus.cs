@@ -21,7 +21,12 @@ public enum MarketplaceSubscriptionStatus
     PendingSubmission = 2,
     
     /// <summary>
-    /// Provisioning request sent to IaC Runner, waiting for webhook callback
+    /// Job saved to database, waiting for IaCRunner to pick it up via polling
+    /// </summary>
+    PendingProvisioning = 10,
+    
+    /// <summary>
+    /// Provisioning request claimed by IaC Runner, waiting for webhook callback
     /// </summary>
     Provisioning = 3,
     

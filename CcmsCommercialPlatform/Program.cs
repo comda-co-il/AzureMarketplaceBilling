@@ -64,12 +64,8 @@ builder.Services.AddHttpClient("AzureMarketplace", client =>
     client.Timeout = TimeSpan.FromSeconds(30);
 });
 
-// Add named HttpClient for Claude IaC Runner API
-builder.Services.AddHttpClient("IaCRunner", client =>
-{
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
-    client.Timeout = TimeSpan.FromSeconds(60);
-});
+// Note: IaCRunner HttpClient removed - now using polling architecture
+// IaCRunner polls GET /api/iac/pending-jobs from the private network
 
 // Configure CORS for React frontend
 builder.Services.AddCors(options =>
