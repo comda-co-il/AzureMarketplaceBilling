@@ -22,10 +22,12 @@ public class PlansController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Plan>>> GetPlans()
     {
-        var plans = await _context.Plans
+        List<Plan> plans = await _context.Plans
             .Include(p => p.Quotas)
-            .OrderBy(p => p.MonthlyPrice)
             .ToListAsync();
+        
+        // Order in memory to avoid SQLite decimal ORDER BY limitation
+        plans = [.. plans.OrderBy(p => p.MonthlyPrice)];
         
         return Ok(plans);
     }
